@@ -1,4 +1,5 @@
 #include "machineid.h"
+#include "fujicmd.h"
 
 #include <fujinet-fuji.h>
 #ifndef _CMOC_VERSION_
@@ -44,6 +45,9 @@ int main()
   if (instafail)
     exit(1);
 
+  // FIXME - test everything listed in fujicmd.h
+  
+  cprintf("All tests passed!\n");
   exit(0);
   return 0;
 }
