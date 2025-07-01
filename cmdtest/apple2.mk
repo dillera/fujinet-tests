@@ -5,9 +5,9 @@ define single-to-double
   unsingle $< && mv $<.ad $@ && mv .AppleDouble/$<.ad .AppleDouble/$@
 endef
 
-all: $(TARGET).a2
+all: $(TARGET).$(PLATFORM)
 
-$(TARGET).a2: $(TARGET).bin
+$(TARGET).$(PLATFORM): $(TARGET).bin
 	$(single-to-double)
 $(TARGET).bin: $(OBJS)
 	echo OBJS: $(OBJS)
