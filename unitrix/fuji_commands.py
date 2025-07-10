@@ -1,0 +1,110 @@
+from dataclasses import dataclass
+import struct
+from enum import Enum
+
+FLAG_DATA  = 0x10
+FLAG_REPLY = 0x20
+
+MAX_FILENAME_LEN = 256
+
+@dataclass
+class FujiCommand:
+  command: int
+  aux: list
+  data: str
+  replyLength: int
+
+  def header(self) -> bytes:
+    auxlen = len(self.aux)
+    flags = (1 << auxlen) - 1
+    if self.data:
+      flags |= FLAG_DATA
+    aux_data = self.aux
+    if not aux_data:
+      aux_data = []
+    aux_data = (aux_data + [0, 0, 0, 0])[:4]
+    return struct.pack("<B B BBBB H", self.command.value, flags, *aux_data, self.replyLength)
+
+class FUJICMD(Enum):
+  RESET                      = 0xFF
+  GET_SSID                   = 0xFE
+  SCAN_NETWORKS              = 0xFD
+  GET_SCAN_RESULT            = 0xFC
+  SET_SSID                   = 0xFB
+  GET_WIFISTATUS             = 0xFA
+  MOUNT_HOST                 = 0xF9
+  MOUNT_IMAGE                = 0xF8
+  OPEN_DIRECTORY             = 0xF7
+  READ_DIR_ENTRY             = 0xF6
+  CLOSE_DIRECTORY            = 0xF5
+  READ_HOST_SLOTS            = 0xF4
+  WRITE_HOST_SLOTS           = 0xF3
+  READ_DEVICE_SLOTS          = 0xF2
+  WRITE_DEVICE_SLOTS         = 0xF1
+  ENABLE_UDPSTREAM           = 0xF0
+  GET_WIFI_ENABLED           = 0xEA
+  SET_BAUDRATE               = 0xEB
+  UNMOUNT_IMAGE              = 0xE9
+  GET_ADAPTERCONFIG          = 0xE8
+  NEW_DISK                   = 0xE7
+  UNMOUNT_HOST               = 0xE6
+  GET_DIRECTORY_POSITION     = 0xE5
+  SET_DIRECTORY_POSITION     = 0xE4
+  SET_HSIO_INDEX             = 0xE3
+  SET_DEVICE_FULLPATH        = 0xE2
+  SET_HOST_PREFIX            = 0xE1
+  GET_HOST_PREFIX            = 0xE0
+  SET_SIO_EXTERNAL_CLOCK     = 0xDF
+  WRITE_APPKEY               = 0xDE
+  READ_APPKEY                = 0xDD
+  OPEN_APPKEY                = 0xDC
+  CLOSE_APPKEY               = 0xDB
+  GET_DEVICE_FULLPATH        = 0xDA
+  CONFIG_BOOT                = 0xD9
+  COPY_FILE                  = 0xD8
+  MOUNT_ALL                  = 0xD7
+  SET_BOOT_MODE              = 0xD6
+  ENABLE_DEVICE              = 0xD5
+  DISABLE_DEVICE             = 0xD4
+  RANDOM_NUMBER              = 0xD3
+  GET_TIME                   = 0xD2
+  DEVICE_ENABLE_STATUS       = 0xD1
+  BASE64_ENCODE_INPUT        = 0xD0
+  BASE64_ENCODE_COMPUTE      = 0xCF
+  BASE64_ENCODE_LENGTH       = 0xCE
+  BASE64_ENCODE_OUTPUT       = 0xCD
+  BASE64_DECODE_INPUT        = 0xCC
+  BASE64_DECODE_COMPUTE      = 0xCB
+  BASE64_DECODE_LENGTH       = 0xCA
+  BASE64_DECODE_OUTPUT       = 0xC9
+  HASH_INPUT                 = 0xC8
+  HASH_COMPUTE               = 0xC7
+  HASH_LENGTH                = 0xC6
+  HASH_OUTPUT                = 0xC5
+  GET_ADAPTERCONFIG_EXTENDED = 0xC4
+  HASH_COMPUTE_NO_CLEAR      = 0xC3
+  HASH_CLEAR                 = 0xC2
+  GET_HEAP                   = 0xC1
+  QRCODE_OUTPUT              = 0xBF
+  QRCODE_LENGTH              = 0xBE
+  QRCODE_ENCODE              = 0xBD
+  QRCODE_INPUT               = 0xBC
+  GET_DEVICE8_FULLPATH       = 0xA7
+  GET_DEVICE7_FULLPATH       = 0xA6
+  GET_DEVICE6_FULLPATH       = 0xA5
+  GET_DEVICE5_FULLPATH       = 0xA4
+  GET_DEVICE4_FULLPATH       = 0xA3
+  GET_DEVICE3_FULLPATH       = 0xA2
+  GET_DEVICE2_FULLPATH       = 0xA1
+  GET_DEVICE1_FULLPATH       = 0xA0
+  STATUS                     = 0x53
+  HSIO_INDEX                 = 0x3F
+  SEND_ERROR                 = 0x02
+  SEND_RESPONSE              = 0x01
+  DEVICE_READY               = 0x00
+  
+FUJI_COMMANDS = [
+  FujiCommand(command=FUJICMD.SET_HOST_PREFIX, aux=[1], data="/test", replyLength=0),
+  FujiCommand(command=FUJICMD.GET_HOST_PREFIX, aux=[1], data="/test",
+              replyLength=MAX_FILENAME_LEN),
+]

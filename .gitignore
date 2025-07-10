@@ -61,3 +61,4 @@ dkms.conf
 *~
 *.orig
 *.rej
+__pycache__
