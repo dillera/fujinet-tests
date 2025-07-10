@@ -47,11 +47,12 @@ int main()
   for (;;) {
     // Read command, flags, and 4 aux bytes, 
     rlen = network_read(CONTROLLER, &tc_buf, sizeof(tc_buf));
+    if (rlen < 0)
+      break;
+
     printf("Received command: 0x%02x  AUX: 0x%02x 0x%02x 0x%02x 0x%02x  REPLY: %i\n",
 	   tc_buf.command, tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 	   tc_buf.reply_len);
-    if (!rlen)
-      break;
     
     datalen = 0;
     reply = data = NULL;
@@ -67,7 +68,7 @@ int main()
 			    tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 			    data, datalen, reply, tc_buf.reply_len);
 
-    if (!success) {
+    if (!success || fn_device_error) {
       printf("Command failed: 0x%02x / %i\n", fn_device_error, fn_device_error);
       fail_count++;
       break;
