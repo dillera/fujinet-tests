@@ -64,23 +64,34 @@ def main():
         if command.data:
           conn.sendall(command.data.encode("utf-8"))
 
-        err = conn.recv(1)
-        print("Result:", err)
-        if command.replyLength:
-          reply = conn.recv(4096)
-          # FIXME - check to make sure reply data is correct
-
-        if err:
-          print(f"Test of {command.command} FAIL")
-          return 1
-
         if trigger_found:
           print(f"GURU ERROR test of {command.command} FAIL")
           return 1
+
+        err = True
+        data = conn.recv(1)
+        if data:
+          err = data[0]
+        print("Result:", err)
+
+        if err:
+          if not command.warnOnly:
+            print(f"Test of {command.command} FAIL")
+            return 1
+          print(f"WARNING test of {command.command} did not succeed")
+        else:
+          if command.replyLength:
+            reply = conn.recv(4096)
+            if reply != command.reply:
+              printf("Data mismatch.\n"
+                     f"  Expected \"{command.reply}\"\n"
+                     f"  Received \"{reply}\"\n")
+              return 1
+
+  # FIXME - display a summary of all tests and their results
 
   server.close()
   return
 
 if __name__ == "__main__":
   exit(main() or 0)
-

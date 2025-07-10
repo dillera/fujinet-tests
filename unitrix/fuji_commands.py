@@ -2,28 +2,29 @@ from dataclasses import dataclass
 import struct
 from enum import Enum
 
-FLAG_DATA  = 0x10
-FLAG_REPLY = 0x20
+FLAG_WARN = 0x10
 
 MAX_FILENAME_LEN = 256
 
 @dataclass
 class FujiCommand:
   command: int
-  aux: list
-  data: str
-  replyLength: int
+  aux: list = None
+  data: str = None
+  replyLength: int = 0
+  reply: str = None
+  warnOnly: bool = False
 
   def header(self) -> bytes:
     auxlen = len(self.aux)
     flags = (1 << auxlen) - 1
-    if self.data:
-      flags |= FLAG_DATA
+    if self.warnOnly:
+      flags |= FLAG_WARN
     aux_data = self.aux
     if not aux_data:
       aux_data = []
     aux_data = (aux_data + [0, 0, 0, 0])[:4]
-    return struct.pack("<B B BBBB H", self.command.value, flags, *aux_data, self.replyLength)
+    return struct.pack("<B B BBBB HH", self.command.value, flags, *aux_data, 0 if not self.data else len(self.data), self.replyLength)
 
 class FUJICMD(Enum):
   RESET                      = 0xFF
@@ -104,7 +105,7 @@ class FUJICMD(Enum):
   DEVICE_READY               = 0x00
   
 FUJI_COMMANDS = [
-  FujiCommand(command=FUJICMD.SET_HOST_PREFIX, aux=[1], data="/test", replyLength=0),
-  FujiCommand(command=FUJICMD.GET_HOST_PREFIX, aux=[1], data="/test",
-              replyLength=MAX_FILENAME_LEN),
+  FujiCommand(command=FUJICMD.SET_HOST_PREFIX, aux=[1], data="/test", warnOnly=True),
+  FujiCommand(command=FUJICMD.GET_HOST_PREFIX, aux=[1], warnOnly=True,
+              replyLength=MAX_FILENAME_LEN, reply="/test"),
 ]
