@@ -58,3 +58,6 @@ dkms.conf
 *.po
 *.do
 *.atr
+*~
+*.orig
+*.rej

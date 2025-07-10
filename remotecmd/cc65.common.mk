@@ -1,7 +1,6 @@
 CC=cl65
 # FUJINET_LIB_DIR=$(HOME)/source/fujinet/fujinet-lib
 # CFLAGS=-O --cpu 6502 -I$(FUJINET_LIB_DIR)
-FUJINET_LIB_DIR=$(HOME)/source/fujinet/fujinet-lib-unified
 CFLAGS=-O --cpu 6502 -I$(FUJINET_LIB_DIR)/include
 AFLAGS=--cpu 6502
 LIBS=-L $(FUJINET_LIB_DIR)/build fujinet.$(PLATFORM).lib

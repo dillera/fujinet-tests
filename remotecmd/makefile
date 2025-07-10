@@ -1,5 +1,5 @@
 PLATFORMS := apple2 c64 coco atari
--include common.mk
+-include defs.mk
 
 ALL_TARGETS := $(addprefix $(TARGET).,$(PLATFORMS))
 
