@@ -12,10 +12,12 @@ class FujiCommand:
   aux: list = None
   data: str = None
   replyLength: int = 0
-  reply: str = None
+  expected: str = None
   warnOnly: bool = False
 
   def header(self) -> bytes:
+    if not self.aux:
+      self.aux = []
     auxlen = len(self.aux)
     flags = (1 << auxlen) - 1
     if self.warnOnly:
@@ -68,7 +70,6 @@ class FUJICMD(Enum):
   ENABLE_DEVICE              = 0xD5
   DISABLE_DEVICE             = 0xD4
   RANDOM_NUMBER              = 0xD3
-  GET_TIME                   = 0xD2
   DEVICE_ENABLE_STATUS       = 0xD1
   BASE64_ENCODE_INPUT        = 0xD0
   BASE64_ENCODE_COMPUTE      = 0xCF
@@ -105,7 +106,11 @@ class FUJICMD(Enum):
   DEVICE_READY               = 0x00
   
 FUJI_COMMANDS = [
-  FujiCommand(command=FUJICMD.SET_HOST_PREFIX, aux=[1], data="/test", warnOnly=True),
-  FujiCommand(command=FUJICMD.GET_HOST_PREFIX, aux=[1], warnOnly=True,
-              replyLength=MAX_FILENAME_LEN, reply="/test"),
+  FujiCommand(command=FUJICMD.SET_HOST_PREFIX, aux=[1, ], data="/test", warnOnly=True),
+  FujiCommand(command=FUJICMD.GET_HOST_PREFIX, aux=[1, ], warnOnly=True,
+              replyLength=MAX_FILENAME_LEN, expected="/test"),
+  FujiCommand(command=FUJICMD.HASH_INPUT, data="testing"),
+  FujiCommand(command=FUJICMD.HASH_COMPUTE, aux=[1, ]),
+  FujiCommand(command=FUJICMD.HASH_LENGTH, aux=[1, ], replyLength=1),
+  FujiCommand(command=FUJICMD.HASH_OUTPUT, aux=[1, ], replyLength=40),
 ]

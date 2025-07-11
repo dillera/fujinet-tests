@@ -82,10 +82,11 @@ def main():
         else:
           if command.replyLength:
             reply = conn.recv(4096)
-            if reply != command.reply:
-              printf("Data mismatch.\n"
-                     f"  Expected \"{command.reply}\"\n"
-                     f"  Received \"{reply}\"\n")
+            print(f"Reply received: {reply}")
+            if command.expected and reply != command.expected:
+              print("Data mismatch.\n"
+                    f"  Expected \"{command.reply}\"\n"
+                    f"  Received \"{reply}\"\n")
               return 1
 
   # FIXME - display a summary of all tests and their results
