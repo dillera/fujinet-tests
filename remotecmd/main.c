@@ -42,7 +42,9 @@ int main()
   if (fail_count)
     exit(1);
 
-  if (network_open(CONTROLLER, OPEN_MODE_RW, 0) != FN_ERR_OK) {
+  err = network_open(CONTROLLER, OPEN_MODE_RW, 0);
+  printf("Connection: %i\n", err);
+  if (err != FN_ERR_OK) {
     printf("Unable to open connection to test controller\n");
     exit(1);
   }
