@@ -104,7 +104,7 @@ class FUJICMD(Enum):
   SEND_ERROR                 = 0x02
   SEND_RESPONSE              = 0x01
   DEVICE_READY               = 0x00
-  
+
 FUJI_COMMANDS = [
   FujiCommand(command=FUJICMD.SET_HOST_PREFIX, aux=[1, ], data="/test", warnOnly=True),
   FujiCommand(command=FUJICMD.GET_HOST_PREFIX, aux=[1, ], warnOnly=True,
@@ -113,4 +113,12 @@ FUJI_COMMANDS = [
   FujiCommand(command=FUJICMD.HASH_COMPUTE, aux=[1, ]),
   FujiCommand(command=FUJICMD.HASH_LENGTH, aux=[1, ], replyLength=1),
   FujiCommand(command=FUJICMD.HASH_OUTPUT, aux=[1, ], replyLength=40),
+
+  # The reply values of these commands will vary depending on config
+  FujiCommand(command=FUJICMD.READ_HOST_SLOTS, replyLength=256),
+  FujiCommand(command=FUJICMD.READ_DEVICE_SLOTS, replyLength=304),
+  FujiCommand(command=FUJICMD.GET_DEVICE1_FULLPATH, replyLength=256),
+
+  # This appears to be a legacy command no longer supported?
+  FujiCommand(command=FUJICMD.GET_DEVICE_FULLPATH, aux=[1, ], replyLength=256, warnOnly=True),
 ]

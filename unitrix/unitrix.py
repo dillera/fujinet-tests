@@ -74,20 +74,23 @@ def main():
           err = data[0]
         print("Result:", err)
 
+        if not err and command.replyLength:
+          reply = conn.recv(4096)
+          print(f"Reply received: {reply}")
+          if command.expected and reply != command.expected:
+            print("Data mismatch.\n"
+                  f"  Expected \"{command.expected}\"\n"
+                  f"  Received \"{reply}\"\n")
+            err = True
+
         if err:
+          prefix = "**FAIL**"
+          if command.warnOnly:
+            prefix = "WARNING"
+          print(f"{prefix} test of {command.command} did not succeed")
           if not command.warnOnly:
-            print(f"Test of {command.command} FAIL")
             return 1
-          print(f"WARNING test of {command.command} did not succeed")
         else:
-          if command.replyLength:
-            reply = conn.recv(4096)
-            print(f"Reply received: {reply}")
-            if command.expected and reply != command.expected:
-              print("Data mismatch.\n"
-                    f"  Expected \"{command.reply}\"\n"
-                    f"  Received \"{reply}\"\n")
-              return 1
 
   # FIXME - display a summary of all tests and their results
 
