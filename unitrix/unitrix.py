@@ -4,7 +4,7 @@ import sys
 import requests
 import time
 import socket
-from fuji_test import FUJI_TESTS, TestResult
+from fuji_test import *
 from serial_monitor import SerialMonitor
 
 SERVER_PORT = 7357
@@ -14,6 +14,28 @@ def build_argparser():
   parser.add_argument("serial", help="serial port")
   parser.add_argument("--baud", type=int, default=460800, help="baud rate")
   return parser
+
+FUJI_TESTS = [
+  FujiTest(command=FUJICMD.SET_HOST_PREFIX, aux=[1, ], data="/test", warnOnly=True),
+  FujiTest(command=FUJICMD.GET_HOST_PREFIX, aux=[1, ], warnOnly=True,
+              replyLength=MAX_FILENAME_LEN, replyType=RType.NULTermString, expected=b"/test"),
+  FujiTest(command=FUJICMD.HASH_INPUT, data="testing"),
+  FujiTest(command=FUJICMD.HASH_COMPUTE, aux=[1, ]),
+  FujiTest(command=FUJICMD.HASH_LENGTH, aux=[1, ], replyLength=1),
+  FujiTest(command=FUJICMD.HASH_OUTPUT, aux=[1, ], replyLength=40),
+
+  # The reply values of these commands will vary depending on config
+  FujiTest(command=FUJICMD.READ_HOST_SLOTS, replyLength=256),
+  FujiTest(command=FUJICMD.READ_DEVICE_SLOTS, replyLength=304),
+  FujiTest(command=FUJICMD.GET_DEVICE1_FULLPATH, replyLength=256),
+
+  # This appears to be a legacy command no longer supported?
+  FujiTest(command=FUJICMD.GET_DEVICE_FULLPATH, aux=[1, ], replyLength=256, warnOnly=True),
+
+  # Clock tests
+  FujiTest(device=FujiDevice.APETIME, command=FUJICMD.GET_TIME_ISO,
+           replyLength=25, replyType=RType.NULTermString)
+]
 
 def main():
   args = build_argparser().parse_args()

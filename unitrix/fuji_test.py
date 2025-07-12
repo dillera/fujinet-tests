@@ -109,21 +109,3 @@ class FujiTest:
   def validate(self):
     # FIXME - do we need to gather expected data from current FujiNet config?
     return self.reply == self.expected
-
-FUJI_TESTS = [
-  FujiTest(command=FUJICMD.SET_HOST_PREFIX, aux=[1, ], data="/test", warnOnly=True),
-  FujiTest(command=FUJICMD.GET_HOST_PREFIX, aux=[1, ], warnOnly=True,
-              replyLength=MAX_FILENAME_LEN, replyType=RType.NULTermString, expected=b"/test"),
-  FujiTest(command=FUJICMD.HASH_INPUT, data="testing"),
-  FujiTest(command=FUJICMD.HASH_COMPUTE, aux=[1, ]),
-  FujiTest(command=FUJICMD.HASH_LENGTH, aux=[1, ], replyLength=1),
-  FujiTest(command=FUJICMD.HASH_OUTPUT, aux=[1, ], replyLength=40),
-
-  # The reply values of these commands will vary depending on config
-  FujiTest(command=FUJICMD.READ_HOST_SLOTS, replyLength=256),
-  FujiTest(command=FUJICMD.READ_DEVICE_SLOTS, replyLength=304),
-  FujiTest(command=FUJICMD.GET_DEVICE1_FULLPATH, replyLength=256),
-
-  # This appears to be a legacy command no longer supported?
-  FujiTest(command=FUJICMD.GET_DEVICE_FULLPATH, aux=[1, ], replyLength=256, warnOnly=True),
-]

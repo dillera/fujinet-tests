@@ -76,3 +76,7 @@ class FUJICMD(Enum):
   SEND_ERROR                 = 0x02
   SEND_RESPONSE              = 0x01
   DEVICE_READY               = 0x00
+
+  # Clock commands
+  GET_TIME_SOS               = ord('S')
+  GET_TIME_ISO               = ord('I')
