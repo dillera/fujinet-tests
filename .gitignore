@@ -62,3 +62,5 @@ dkms.conf
 *.orig
 *.rej
 __pycache__
+cmdtest/cmdtest.*
+remotecmd/rmttest.*
