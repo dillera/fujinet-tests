@@ -11,6 +11,7 @@
 #define FLAG_WARN 0x10
 
 typedef struct {
+  uint8_t device;
   uint8_t command;
   uint8_t flags;
   uint8_t aux1, aux2, aux3, aux4;
@@ -55,10 +56,10 @@ int main()
     if (rlen < 0 || fn_device_error)
       break;
 
-    printf("Received command: 0x%02x\n"
+    printf("Received command: 0x%02x:%02x\n"
 	   "  AUX: 0x%02x 0x%02x 0x%02x 0x%02x\n"
 	   "  DATA: %i REPLY: %i\n",
-	   tc_buf.command,
+	   tc_buf.device, tc_buf.command,
 	   tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 	   tc_buf.data_len, tc_buf.reply_len);
     
@@ -90,8 +91,8 @@ int main()
     if (tc_buf.reply_len)
       reply = buffer;
 
-    printf("Executing 0x%02x\n", tc_buf.command);
-    success = fuji_bus_call(FUJI_DEVICEID_FUJINET, 1, tc_buf.command, tc_buf.flags,
+    printf("Executing 0x%02x:%02x\n", tc_buf.device, tc_buf.command);
+    success = fuji_bus_call(tc_buf.device, 1, tc_buf.command, tc_buf.flags,
 			    tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 			    data, datalen, reply, tc_buf.reply_len);
     printf("Result: %i %i\n", success, fn_device_error);
