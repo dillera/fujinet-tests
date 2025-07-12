@@ -11,19 +11,35 @@ class RType(Enum):
   NULTermString = 1
 
 class TestResult(IntEnum):
-  PASS = 0
-  WARNING = 1
-  FAIL = 2
+  PASS       = 0
+  WARNING    = 1
+  FAIL       = 2
   GURU_ERROR = 3
 
 class ErrCode(Enum):
   ReceiveError = -1
   DataMismatch = -2
-  GuruError = -2
+  GuruError    = -2
+
+class FujiDevice(Enum):
+  DISK         = 0x31
+  DISK_LAST    = 0x3F
+  PRINTER      = 0x40
+  PRINTER_LAST = 0x43
+  FN_VOICE     = 0x43
+  APETIME      = 0x45
+  RS232        = 0x50
+  RS2323_LAST  = 0x53
+  THEFUJI      = 0x70
+  NETWORK      = 0x71
+  NETWORK_LAST = 0x78
+  MIDI         = 0x99
+  CPM          = 0x5A
 
 @dataclass
 class FujiTest:
   command: int
+  device: int = FujiDevice.THEFUJI
   aux: list = None
   data: str = None
   replyLength: int = 0
@@ -42,7 +58,8 @@ class FujiTest:
     if not aux_data:
       aux_data = []
     aux_data = (aux_data + [0, 0, 0, 0])[:4]
-    return struct.pack("<B B BBBB HH", self.command.value, flags, *aux_data,
+    return struct.pack("<BB B BBBB HH", self.device.value, self.command.value,
+                       flags, *aux_data,
                        0 if not self.data else len(self.data), self.replyLength)
 
   def runTest(self, conn, serial):
