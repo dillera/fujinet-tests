@@ -1,32 +1,4 @@
-from dataclasses import dataclass
-import struct
 from enum import Enum
-
-FLAG_WARN = 0x10
-
-MAX_FILENAME_LEN = 256
-
-@dataclass
-class FujiCommand:
-  command: int
-  aux: list = None
-  data: str = None
-  replyLength: int = 0
-  expected: str = None
-  warnOnly: bool = False
-
-  def header(self) -> bytes:
-    if not self.aux:
-      self.aux = []
-    auxlen = len(self.aux)
-    flags = (1 << auxlen) - 1
-    if self.warnOnly:
-      flags |= FLAG_WARN
-    aux_data = self.aux
-    if not aux_data:
-      aux_data = []
-    aux_data = (aux_data + [0, 0, 0, 0])[:4]
-    return struct.pack("<B B BBBB HH", self.command.value, flags, *aux_data, 0 if not self.data else len(self.data), self.replyLength)
 
 class FUJICMD(Enum):
   RESET                      = 0xFF
@@ -104,21 +76,3 @@ class FUJICMD(Enum):
   SEND_ERROR                 = 0x02
   SEND_RESPONSE              = 0x01
   DEVICE_READY               = 0x00
-
-FUJI_COMMANDS = [
-  FujiCommand(command=FUJICMD.SET_HOST_PREFIX, aux=[1, ], data="/test", warnOnly=True),
-  FujiCommand(command=FUJICMD.GET_HOST_PREFIX, aux=[1, ], warnOnly=True,
-              replyLength=MAX_FILENAME_LEN, expected="/test"),
-  FujiCommand(command=FUJICMD.HASH_INPUT, data="testing"),
-  FujiCommand(command=FUJICMD.HASH_COMPUTE, aux=[1, ]),
-  FujiCommand(command=FUJICMD.HASH_LENGTH, aux=[1, ], replyLength=1),
-  FujiCommand(command=FUJICMD.HASH_OUTPUT, aux=[1, ], replyLength=40),
-
-  # The reply values of these commands will vary depending on config
-  FujiCommand(command=FUJICMD.READ_HOST_SLOTS, replyLength=256),
-  FujiCommand(command=FUJICMD.READ_DEVICE_SLOTS, replyLength=304),
-  FujiCommand(command=FUJICMD.GET_DEVICE1_FULLPATH, replyLength=256),
-
-  # This appears to be a legacy command no longer supported?
-  FujiCommand(command=FUJICMD.GET_DEVICE_FULLPATH, aux=[1, ], replyLength=256, warnOnly=True),
-]
