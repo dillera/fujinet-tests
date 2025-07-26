@@ -26,10 +26,10 @@ class FujiDevice(Enum):
   DISK_LAST    = 0x3F
   PRINTER      = 0x40
   PRINTER_LAST = 0x43
-  FN_VOICE     = 0x43
+  VOICE        = 0x43
   APETIME      = 0x45
-  RS232        = 0x50
-  RS2323_LAST  = 0x53
+  SERIAL       = 0x50
+  SERIAL_LAST  = 0x53
   THEFUJI      = 0x70
   NETWORK      = 0x71
   NETWORK_LAST = 0x78
