@@ -1,3 +1,7 @@
+#include "deviceid.h"
+#include "filecmd.h"
+#include "diskcmd.h"
+
 #include <fujinet-fuji.h>
 #include <fujinet-network.h>
 #include <stdio.h>
@@ -9,14 +13,6 @@
 #define CONTROLLER "N:TCP://10.4.0.242:7357"
 
 #define FLAG_WARN 0x10
-
-typedef struct {
-  uint8_t device;
-  uint8_t command;
-  uint8_t flags;
-  uint8_t aux1, aux2, aux3, aux4;
-  uint16_t data_len, reply_len;
-} TestCommand;
 
 AdapterConfigExtended ace;
 TestCommand tc_buf;
@@ -62,7 +58,7 @@ int main()
 	   tc_buf.device, tc_buf.command,
 	   tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 	   tc_buf.data_len, tc_buf.reply_len);
-    
+
     datalen = 0;
     reply = data = NULL;
     if (tc_buf.data_len) {
@@ -92,9 +88,19 @@ int main()
       reply = buffer;
 
     printf("Executing 0x%02x:%02x\n", tc_buf.device, tc_buf.command);
-    success = fuji_bus_call(tc_buf.device, 1, tc_buf.command, tc_buf.flags,
-			    tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
-			    data, datalen, reply, tc_buf.reply_len);
+    if (tc_buf.device >= FUJI_DEVICEID_DISK && tc_buf.device <= FUJI_DEVICEID_DISK_LAST) {
+      // Disks are handled by the opearating system
+      success = disk_command(&tc_buf, data, reply, sizeof(buffer));
+    }
+    else if (tc_buf.device == FUJI_DEVICEID_FILE) {
+      // pseudo-commands for test controller to open/read/write files
+      success = file_command(&tc_buf, data, reply, sizeof(buffer));
+    }
+    else {
+      success = fuji_bus_call(tc_buf.device, 1, tc_buf.command, tc_buf.flags,
+			      tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
+			      data, datalen, reply, tc_buf.reply_len);
+    }
     printf("Result: %i %i\n", success, fn_device_error);
 
     if (!tc_buf.flags & FLAG_WARN && (!success || fn_device_error)) {
