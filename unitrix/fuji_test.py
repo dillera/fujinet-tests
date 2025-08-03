@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import struct
 from enum import Enum, IntEnum
+import select
 from fuji_commands import FUJICMD
 
 FLAG_WARN = 0x10
@@ -62,30 +63,50 @@ class FujiTest:
                        flags, *aux_data,
                        0 if not self.data else len(self.data), self.replyLength)
 
+  def recv(self, count):
+    # Allow the serial monitor to abort receiving if Guru Error is received
+    readable, _, _ = select.select([self._conn, self._serial.errorSocket], [], [])
+    if self._conn in readable:
+      print("READING socket")
+      try:
+        return self._conn.recv(count)
+      except ConnectionResetError:
+        pass
+    return None
+
+  def sendall(self, data):
+    self._conn.sendall(data)
+    return
+
   def runTest(self, conn, serial):
+    self._conn = conn
+    self._serial = serial
+
     serial.clearBuffer()
 
     print("Testing command", self.command)
-    conn.sendall(self.header())
+    self.sendall(self.header())
     if self.data:
-      conn.sendall(self.data.encode("utf-8"))
+      self.sendall(self.data.encode("utf-8"))
 
     self.errcode = ErrCode.ReceiveError
-    data = conn.recv(1)
+    data = self.recv(1)
     if data:
       self.errcode = data[0]
     print("Result:", self.errcode)
 
     if not self.errcode and self.replyLength:
-      self.reply = conn.recv(4096)
-      if self.replyType == RType.NULTermString:
-        self.reply = self.reply.split(b"\x00")[0]
-      print(f"Reply received: {self.reply}")
-      if self.expected and not self.validate():
-        print("Data mismatch.\n"
-              f"  Expected \"{self.expected}\"\n"
-              f"  Received \"{self.reply}\"\n")
-        self.errcode = ErrCode.DataMismatch
+      self.reply = self.recv(4096)
+
+      if self.reply is not None:
+        if self.replyType == RType.NULTermString:
+          self.reply = self.reply.split(b"\x00")[0]
+        print(f"Reply received: {self.reply}")
+        if self.expected and not self.validate():
+          print("Data mismatch.\n"
+                f"  Expected \"{self.expected}\"\n"
+                f"  Received \"{self.reply}\"\n")
+          self.errcode = ErrCode.DataMismatch
 
     self.log = serial.buffer
 
@@ -99,7 +120,7 @@ class FujiTest:
         prefix = "WARNING"
       print(f"{prefix} test of {self.command} did not succeed")
       if self.errcode == ErrCode.GuruError:
-        return TestResult.GuruError
+        return TestResult.GURU_ERROR
       if self.warnOnly:
         return TestResult.WARNING
       return TestResult.FAIL

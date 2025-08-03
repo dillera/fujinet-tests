@@ -1,6 +1,7 @@
 import threading
 import serial
 import sys
+import socket
 
 GURU_ERROR = 'Guru Meditation Error'
 
@@ -10,6 +11,7 @@ class SerialMonitor:
     self.serial = serial.Serial(port, speed, timeout=0.5)
     self.trigger = trigger
     self.buffer = []
+    self.wakeupRecv, self.wakeupSend = socket.socketpair()
     return
 
   def monitor(self):
@@ -20,8 +22,9 @@ class SerialMonitor:
           self.buffer.append(line)
           print(f"CONSOLE: {line}", end="", flush=True)
         if self.trigger in line:
-          print(f"Detected: {trigger}", file=sys.stderr)
+          print(f"Detected: {self.trigger}", file=sys.stderr)
           self.triggerFound = True
+          self.wakeupSend.send(b'E')
     except Exception as e:
       print(f"Serial error: {e}", file=sys.stderr)
       self.triggerFound = True
@@ -35,3 +38,7 @@ class SerialMonitor:
     self.thread = threading.Thread(target=self.monitor, daemon=True)
     self.thread.start()
     return
+
+  @property
+  def errorSocket(self):
+    return self.wakeupRecv

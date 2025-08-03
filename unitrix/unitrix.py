@@ -37,6 +37,10 @@ FUJI_TESTS = [
            replyLength=25, replyType=RType.NULTermString)
 ]
 
+ISSUE_910_TESTS = [
+  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[1, 0]),
+]
+
 def main():
   args = build_argparser().parse_args()
 
@@ -47,16 +51,20 @@ def main():
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(("0.0.0.0", SERVER_PORT))
     server.listen(1)
-    print(f'Listening on {server.getsockname()[0]}:{server.getsockname()[1]}...')
+    print(f"Listening on {server.getsockname()[0]}:{server.getsockname()[1]}...")
 
     conn, addr = server.accept()
     with conn:
-      print(f'Connected by {addr}')
+      print(f"Connected by {addr}")
 
       # FIXME - get FujiNet firmware version and type of machine running tests
 
+      # FIXME - load tests to run from JSON file
+      tests_to_run = FUJI_TESTS
+      #tests_to_run = ISSUE_910_TESTS
+
       # Loop through fuji commands
-      for test in FUJI_TESTS:
+      for test in tests_to_run:
         if test.runTest(conn, guruWatch) >= TestResult.FAIL:
           return 1
 
