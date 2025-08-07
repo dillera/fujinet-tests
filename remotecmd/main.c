@@ -10,7 +10,8 @@
 #include <conio.h>
 
 // FIXME - get config from file or user
-#define CONTROLLER "N:TCP://10.4.0.242:7357"
+//#define CONTROLLER "N:TCP://10.4.0.242:7357"
+#define CONTROLLER "N:TCP://10.4.0.102:7357"
 
 #define FLAG_WARN 0x10
 
@@ -47,7 +48,7 @@ int main()
   }
 
   for (;;) {
-    // Read command, flags, and 4 aux bytes, 
+    // Read command, flags, and 4 aux bytes,
     rlen = network_read(CONTROLLER, &tc_buf, sizeof(tc_buf));
     if (rlen < 0 || fn_device_error)
       break;
@@ -101,14 +102,14 @@ int main()
 			      tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 			      data, datalen, reply, tc_buf.reply_len);
     }
-    printf("Result: %i %i\n", success, fn_device_error);
+    printf("Result: %i %i 0x%02x\n", success, fn_device_error, tc_buf.flags);
 
-    if (!tc_buf.flags & FLAG_WARN && (!success || fn_device_error)) {
+    if (!(tc_buf.flags & FLAG_WARN) && (!success || fn_device_error)) {
       printf("Command failed: 0x%02x / %i\n", fn_device_error, fn_device_error);
       fail_count++;
       break;
     }
-    
+
     // Send results back to controller
     wlen = network_write(CONTROLLER, &fn_device_error, 1);
     if (success && tc_buf.reply_len)
@@ -117,10 +118,15 @@ int main()
 
   network_close(CONTROLLER);
 
-  if (fail_count)
+  if (fail_count) {
+    printf("********************\n");
+    printf("%i tests failed\n", fail_count);
+    printf("********************\n");
     exit(1);
+  }
 
   printf("All tests passed!\n");
+
   exit(0);
   return 0;
 }

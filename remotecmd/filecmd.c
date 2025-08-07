@@ -1,5 +1,6 @@
 #include "filecmd.h"
 #include <stdio.h>
+#include <errno.h>
 
 #define MAX_OPEN_FILES 8
 static FILE *file_handles[MAX_OPEN_FILES];
@@ -34,7 +35,6 @@ bool file_command(TestCommand *cmd, void *data, void *reply, size_t reply_max)
   const char *mode;
   int err;
   size_t len;
-  ReadReply *rr;
   bool success = false;
 
 
@@ -53,7 +53,9 @@ bool file_command(TestCommand *cmd, void *data, void *reply, size_t reply_max)
     if (fh < 0)
       return false;
 
+    printf("FILECMD opening handle %i %s - \"%s\"\n", fh, mode, data);
     file_handles[fh] = fopen(data, mode);
+    printf("open error: %i\n", errno);
     if (!file_handles[fh])
       return false;
 
@@ -79,10 +81,10 @@ bool file_command(TestCommand *cmd, void *data, void *reply, size_t reply_max)
     if (!valid_handle(fh))
       return false;
 
-    rr = reply;
-    rr->length = fread(&rr->data, 1,
-		       MIN(cmd->reply_len, reply_max - (&rr->data[0] - ((uint8_t *) rr))),
-		       file_handles[fh]);
+    len = fread(reply, 1, MIN(cmd->reply_len, reply_max),
+		file_handles[fh]);
+    // Send back the actual amount of data received
+    cmd->reply_len = len;
     success = true;
     break;
 
