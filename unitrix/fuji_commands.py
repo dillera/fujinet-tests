@@ -17,8 +17,8 @@ class FUJICMD(Enum):
   READ_DEVICE_SLOTS          = 0xF2
   WRITE_DEVICE_SLOTS         = 0xF1
   ENABLE_UDPSTREAM           = 0xF0
-  GET_WIFI_ENABLED           = 0xEA
   SET_BAUDRATE               = 0xEB
+  GET_WIFI_ENABLED           = 0xEA
   UNMOUNT_IMAGE              = 0xE9
   GET_ADAPTERCONFIG          = 0xE8
   NEW_DISK                   = 0xE7
@@ -71,7 +71,11 @@ class FUJICMD(Enum):
   GET_DEVICE3_FULLPATH       = 0xA2
   GET_DEVICE2_FULLPATH       = 0xA1
   GET_DEVICE1_FULLPATH       = 0xA0
+  WRITE                      = 0x57
   STATUS                     = 0x53
+  READ                       = 0x52
+  OPEN                       = 0x4F
+  CLOSE                      = 0x43
   HSIO_INDEX                 = 0x3F
   SEND_ERROR                 = 0x02
   SEND_RESPONSE              = 0x01

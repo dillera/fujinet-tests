@@ -4,8 +4,9 @@ import sys
 import requests
 import time
 import socket
-from fuji_test import *
 from serial_monitor import SerialMonitor
+from fuji_test import *
+from file_test import FileTest
 
 SERVER_PORT = 7357
 
@@ -34,11 +35,19 @@ FUJI_TESTS = [
 
   # Clock tests
   FujiTest(device=FujiDevice.APETIME, command=FUJICMD.GET_TIME_ISO,
-           replyLength=25, replyType=RType.NULTermString)
+           replyLength=25, replyType=RType.NULTermString),
+
+  # Mount Image should fail if host is not mounted first:
+  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[1, 0], errorExpected=True),
 ]
 
 ISSUE_910_TESTS = [
-  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[1, 0]),
+  FujiTest(command=FUJICMD.MOUNT_HOST, aux=[0]),
+  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[0, 2]),
+  # FujiTest(device=FujiDevice.FILE, command=FUJICMD.OPEN, aux=[OPEN_WRITE],
+  #          data="/CHRIS.DISK/TESTDATA", replyLength=1),
+  FileTest(OPEN_WRITE, "/CHRIS.DISK/TESTDATA", "DOES THIS WORK"),
+  FileTest(OPEN_READ, "/CHRIS.DISK/TESTDATA", "DOES THIS WORK".encode("UTF-8")),
 ]
 
 def main():
@@ -60,13 +69,16 @@ def main():
       # FIXME - get FujiNet firmware version and type of machine running tests
 
       # FIXME - load tests to run from JSON file
-      tests_to_run = FUJI_TESTS
-      #tests_to_run = ISSUE_910_TESTS
+      #tests_to_run = FUJI_TESTS
+      tests_to_run = ISSUE_910_TESTS
 
       # Loop through fuji commands
       for test in tests_to_run:
         if test.runTest(conn, guruWatch) >= TestResult.FAIL:
-          return 1
+          break
+
+    # Sleep to allow capturing of any backtraces
+    time.sleep(1)
 
   # FIXME - display a summary of all tests and their results
 

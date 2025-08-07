@@ -8,6 +8,9 @@ FLAG_WARN = 0x10
 
 MAX_FILENAME_LEN = 256
 
+OPEN_READ  = 0x40
+OPEN_WRITE = 0x80
+
 class RType(Enum):
   NULTermString = 1
 
@@ -31,11 +34,12 @@ class FujiDevice(Enum):
   APETIME      = 0x45
   SERIAL       = 0x50
   SERIAL_LAST  = 0x53
+  CPM          = 0x5A
   THEFUJI      = 0x70
   NETWORK      = 0x71
   NETWORK_LAST = 0x78
   MIDI         = 0x99
-  CPM          = 0x5A
+  FILE         = 0xAA
 
 @dataclass
 class FujiTest:
@@ -47,6 +51,7 @@ class FujiTest:
   replyType: RType = None
   expected: str = None
   warnOnly: bool = False
+  errorExpected: bool = False
 
   def header(self) -> bytes:
     if not self.aux:
