@@ -2,8 +2,7 @@
 #define FILECMD_H
 
 #include "command.h"
-#include <stdbool.h>
-#include <stdlib.h>
+#include <fujinet-fuji.h>
 
 #define OPEN_READ    0x40
 #define OPEN_WRITE   0x80

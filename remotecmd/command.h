@@ -1,8 +1,8 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-#include <fujinet-commands.h>
-#include <stdint.h>
+#include <fujinet-fuji.h>
+//#include <fujinet-commands.h>
 
 typedef struct {
   uint8_t device;

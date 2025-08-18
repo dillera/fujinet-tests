@@ -1,3 +1,4 @@
+#ifndef _CMOC_VERSION_
 #include "filecmd.h"
 #include <stdio.h>
 #include <errno.h>
@@ -101,3 +102,4 @@ bool file_command(TestCommand *cmd, void *data, void *reply, size_t reply_max)
 
   return success;
 }
+#endif /* _CMOC_VERSION_ */

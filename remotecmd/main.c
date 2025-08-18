@@ -1,13 +1,15 @@
 #include "deviceid.h"
-#include "filecmd.h"
 #include "diskcmd.h"
 
 #include <fujinet-fuji.h>
 #include <fujinet-network.h>
+
+#ifndef _CMOC_VERSION_
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <conio.h>
+#endif /* _CMOC_VERSION_ */
 
 // FIXME - get config from file or user
 //#define CONTROLLER "N:TCP://10.4.0.242:7357"
@@ -41,7 +43,7 @@ int main()
     exit(1);
 
   err = network_open(CONTROLLER, OPEN_MODE_RW, 0);
-  printf("Connection: %i\n", err);
+  printf("Connection: %d\n", err);
   if (err != FN_ERR_OK) {
     printf("Unable to open connection to test controller\n");
     exit(1);
@@ -55,7 +57,7 @@ int main()
 
     printf("Received command: 0x%02x:%02x\n"
 	   "  AUX: 0x%02x 0x%02x 0x%02x 0x%02x\n"
-	   "  DATA: %i REPLY: %i\n",
+	   "  DATA: %d REPLY: %d\n",
 	   tc_buf.device, tc_buf.command,
 	   tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 	   tc_buf.data_len, tc_buf.reply_len);
@@ -71,15 +73,15 @@ int main()
 	  break;
       }
       if (fn_device_error) {
-	printf("Failed to read data %i %i %i\n", avail, status, err);
+	printf("Failed to read data %d %d %d\n", avail, status, err);
 	fail_count++;
 	break;
       }
       datalen = network_read(CONTROLLER, buffer, tc_buf.data_len);
       data = buffer;
-      printf("Received data of length: %i\n", datalen);
+      printf("Received data of length: %d\n", datalen);
       if (datalen != tc_buf.data_len) {
-	printf("expected %i\n", tc_buf.data_len);
+	printf("expected %d\n", tc_buf.data_len);
 	fail_count++;
 	break;
       }
@@ -94,18 +96,23 @@ int main()
       success = disk_command(&tc_buf, data, reply, sizeof(buffer));
     }
     else if (tc_buf.device == FUJI_DEVICEID_FILE) {
+#ifdef _CMOC_VERSION_
+      // CMOC doesn't provide any file I/O routines for DECB
+      success = 0;
+#else /* ! _CMOC_VERSION_ */
       // pseudo-commands for test controller to open/read/write files
       success = file_command(&tc_buf, data, reply, sizeof(buffer));
+#endif /* _CMOC_VERSION_ */
     }
     else {
       success = fuji_bus_call(tc_buf.device, 1, tc_buf.command, tc_buf.flags,
 			      tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 			      data, datalen, reply, tc_buf.reply_len);
     }
-    printf("Result: %i %i 0x%02x\n", success, fn_device_error, tc_buf.flags);
+    printf("Result: %d %d 0x%02x\n", success, fn_device_error, tc_buf.flags);
 
     if (!(tc_buf.flags & FLAG_WARN) && (!success || fn_device_error)) {
-      printf("Command failed: 0x%02x / %i\n", fn_device_error, fn_device_error);
+      printf("Command failed: 0x%02x / %d\n", fn_device_error, fn_device_error);
       fail_count++;
       break;
     }
@@ -120,7 +127,7 @@ int main()
 
   if (fail_count) {
     printf("********************\n");
-    printf("%i tests failed\n", fail_count);
+    printf("%d tests failed\n", fail_count);
     printf("********************\n");
     exit(1);
   }

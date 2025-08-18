@@ -1,5 +1,7 @@
 TARGET=rmttest
-FUJINET_LIB_DIR=$(HOME)/source/fujinet/fujinet-lib-unified
+FUJINET_LIB_DIR=../../fujinet-lib-unified
+FNLIB_INCLUDE=$(FUJINET_LIB_DIR)/include
+FNLIB_LIBS=$(FUJINET_LIB_DIR)/build
 
 CFILES= main.c diskcmd.c filecmd.c
 HFILES= command.h deviceid.h diskcmd.h filecmd.h

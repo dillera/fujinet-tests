@@ -1,18 +1,16 @@
 CC=cmoc
 AS=lwasm
-# FUJINET_LIB_DIR=$(HOME)/source/fujinet/fujinet-lib
-# CFLAGS=-I$(FUJINET_LIB_DIR) -I$(FUJINET_LIB_DIR)/coco/src/include
-FUJINET_LIB_DIR=$(HOME)/source/fujinet/fujinet-lib-unified
-CFLAGS=-I$(FUJINET_LIB_DIR) -I$(FUJINET_LIB_DIR)/include
+CFLAGS=-I$(FNLIB_INCLUDE)
 AFLAGS=
-LIBS=-L $(FUJINET_LIB_DIR)/build -lfujinet.$(PLATFORM)
+LIBS=-L $(FNLIB_LIBS) -lfujinet.$(PLATFORM)
 
 define link-bin
-  $(CC) -o $@ $(LDFLAGS) $^ $(LIBS)
+  $(CC) -o $@ $(LDFLAGS) $^ $(LIBS) 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
 endef
 
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) -o $@ $< 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
+
 
 $(OBJDIR)/%.o: %.s | $(OBJDIR)
-	$(CC) -c $(AFLAGS) -o $@ $<
+	$(CC) -c $(AFLAGS) -o $@ $< 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'

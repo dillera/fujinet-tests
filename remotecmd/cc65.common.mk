@@ -1,9 +1,7 @@
 CC=cl65
-# FUJINET_LIB_DIR=$(HOME)/source/fujinet/fujinet-lib
-# CFLAGS=-O --cpu 6502 -I$(FUJINET_LIB_DIR)
-CFLAGS=-O --cpu 6502 -I$(FUJINET_LIB_DIR)/include
+CFLAGS=-O --cpu 6502 -I$(FNLIB_INCLUDE)
 AFLAGS=--cpu 6502
-LIBS=-L $(FUJINET_LIB_DIR)/build fujinet.$(PLATFORM).lib
+LIBS=-L $(FNLIB_LIBS) fujinet.$(PLATFORM).lib
 
 define link-bin
   $(CC) -vm -t $(PLATFORM) $(LDFLAGS) $^ $(LIBS) -o $@
