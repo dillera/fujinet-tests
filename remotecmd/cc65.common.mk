@@ -1,14 +1,16 @@
 CC=cl65
-CFLAGS=-O --cpu 6502 -I$(FNLIB_INCLUDE)
+CFLAGS=-O --cpu 6502 $(FNLIB_INCLUDE)
 AFLAGS=--cpu 6502
-LIBS=-L $(FNLIB_LIBS) fujinet.$(PLATFORM).lib
+LIBS=-L $(FNLIB_LIB) fujinet.$(PLATFORM).lib
 
 define link-bin
   $(CC) -vm -t $(PLATFORM) $(LDFLAGS) $^ $(LIBS) -o $@
 endef
 
-$(OBJDIR)/%.o: %.c | $(OBJDIR)
-	$(CC) -l $(basename $@).lst -c $(CFLAGS) -t $(PLATFORM) -o $@ $<
+define compile
+  $(CC) -l $(basename $@).lst -c $(CFLAGS) -t $(PLATFORM) -o $@ $<
+endef
 
-$(OBJDIR)/%.o: %.s | $(OBJDIR)
-	$(CC) -l $(basename $@).lst -c $(AFLAGS) -t $(PLATFORM) -o $@ $<
+define assemble
+  $(CC) -l $(basename $@).lst -c $(AFLAGS) -t $(PLATFORM) -o $@ $<
+endef

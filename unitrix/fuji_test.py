@@ -3,6 +3,7 @@ import struct
 from enum import Enum, IntEnum
 import select
 from fuji_commands import FUJICMD
+from hexdump import hexdump
 
 FLAG_WARN = 0x10
 
@@ -90,9 +91,12 @@ class FujiTest:
     serial.clearBuffer()
 
     print("Testing command", self.command)
-    self.sendall(self.header())
+    hdata = self.header()
+    hexdump(hdata)
+    self.sendall(hdata)
     if self.data:
-      self.sendall(self.data.encode("utf-8"))
+      data = self.data.encode("utf-8") if isinstance(self.data, str) else self.data
+      self.sendall(data)
 
     self.errcode = ErrCode.ReceiveError
     data = self.recv(1)

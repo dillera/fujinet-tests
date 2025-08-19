@@ -1,5 +1,7 @@
 #include "deviceid.h"
 #include "diskcmd.h"
+#include "hexdump.h"
+#include "endian.h"
 
 #include <fujinet-fuji.h>
 #include <fujinet-network.h>
@@ -12,8 +14,8 @@
 #endif /* _CMOC_VERSION_ */
 
 // FIXME - get config from file or user
-//#define CONTROLLER "N:TCP://10.4.0.242:7357"
-#define CONTROLLER "N:TCP://10.4.0.102:7357"
+#define CONTROLLER "N:TCP://10.4.0.242:7357"
+//#define CONTROLLER "N:TCP://10.4.0.102:7357"
 
 #define FLAG_WARN 0x10
 
@@ -26,7 +28,7 @@ int main()
   uint8_t *data, *reply;
   size_t datalen;
   int16_t rlen, wlen;
-  bool success;
+  bool success, did_fail;
   uint16_t avail;
   uint8_t status, err;
   uint8_t fail_count = 0;
@@ -42,18 +44,27 @@ int main()
   if (fail_count)
     exit(1);
 
+  printf("Opening controller\n");
   err = network_open(CONTROLLER, OPEN_MODE_RW, 0);
   printf("Connection: %d\n", err);
   if (err != FN_ERR_OK) {
-    printf("Unable to open connection to test controller\n");
+    printf("Unable to open connection to test controller: %d\n", err);
     exit(1);
   }
 
   for (;;) {
+    did_fail = 0;
     // Read command, flags, and 4 aux bytes,
-    rlen = network_read(CONTROLLER, &tc_buf, sizeof(tc_buf));
-    if (rlen < 0 || fn_device_error)
+    rlen = network_read(CONTROLLER, (unsigned char *) &tc_buf, sizeof(tc_buf));
+    if (rlen != sizeof(tc_buf)) {
+      did_fail = 1;
+      fail_count++;
+      printf("Network error: %d\n", rlen);
       break;
+    }
+
+    tc_buf.data_len = fntohs(tc_buf.data_len);
+    tc_buf.reply_len = fntohs(tc_buf.reply_len);
 
     printf("Received command: 0x%02x:%02x\n"
 	   "  AUX: 0x%02x 0x%02x 0x%02x 0x%02x\n"
@@ -61,6 +72,11 @@ int main()
 	   tc_buf.device, tc_buf.command,
 	   tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 	   tc_buf.data_len, tc_buf.reply_len);
+
+#ifdef UNUSED
+    hexdump(&tc_buf, sizeof(tc_buf));
+    exit(1);
+#endif /* UNUSED */
 
     datalen = 0;
     reply = data = NULL;
@@ -72,16 +88,12 @@ int main()
 	if (avail)
 	  break;
       }
-      if (fn_device_error) {
-	printf("Failed to read data %d %d %d\n", avail, status, err);
-	fail_count++;
-	break;
-      }
       datalen = network_read(CONTROLLER, buffer, tc_buf.data_len);
       data = buffer;
       printf("Received data of length: %d\n", datalen);
       if (datalen != tc_buf.data_len) {
 	printf("expected %d\n", tc_buf.data_len);
+        did_fail = 1;
 	fail_count++;
 	break;
       }
@@ -109,16 +121,16 @@ int main()
 			      tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 			      data, datalen, reply, tc_buf.reply_len);
     }
-    printf("Result: %d %d 0x%02x\n", success, fn_device_error, tc_buf.flags);
+    printf("Result: %d 0x%02x\n", success, tc_buf.flags);
 
-    if (!(tc_buf.flags & FLAG_WARN) && (!success || fn_device_error)) {
-      printf("Command failed: 0x%02x / %d\n", fn_device_error, fn_device_error);
+    if (!(tc_buf.flags & FLAG_WARN) && !success) {
+      did_fail = 1;
       fail_count++;
       break;
     }
 
     // Send results back to controller
-    wlen = network_write(CONTROLLER, &fn_device_error, 1);
+    wlen = network_write(CONTROLLER, &did_fail, 1);
     if (success && tc_buf.reply_len)
       wlen = network_write(CONTROLLER, reply, tc_buf.reply_len);
   }

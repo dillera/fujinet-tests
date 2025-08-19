@@ -1,9 +1,15 @@
 TARGET=rmttest
+UNIFIED=1
+ifdef UNIFIED
 FUJINET_LIB_DIR=../../fujinet-lib-unified
-FNLIB_INCLUDE=$(FUJINET_LIB_DIR)/include
+FNLIB_INCLUDE=-I$(FUJINET_LIB_DIR)/include
+else
+FUJINET_LIB_DIR=../../fujinet-lib
+FNLIB_INCLUDE=-I$(FUJINET_LIB_DIR) -I$(FUJINET_LIB_DIR)/coco/src/include
+endif
 FNLIB_LIBS=$(FUJINET_LIB_DIR)/build
 
-CFILES= main.c diskcmd.c filecmd.c
+CFILES= main.c diskcmd.c filecmd.c hexdump.c
 HFILES= command.h deviceid.h diskcmd.h filecmd.h
 AFILES= 
 OBJDIR := $(PLATFORM)_obj

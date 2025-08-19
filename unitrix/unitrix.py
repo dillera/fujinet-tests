@@ -41,13 +41,21 @@ FUJI_TESTS = [
   FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[1, 0], errorExpected=True),
 ]
 
+A2_PREFIX = "/FNTEST.APPLE2"
+A2_HOST = 4
+A2_DRIVE = 0
 ISSUE_910_TESTS = [
-  FujiTest(command=FUJICMD.MOUNT_HOST, aux=[0]),
-  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[0, 2]),
-  # FujiTest(device=FujiDevice.FILE, command=FUJICMD.OPEN, aux=[OPEN_WRITE],
-  #          data="/CHRIS.DISK/TESTDATA", replyLength=1),
-  FileTest(OPEN_WRITE, "/CHRIS.DISK/TESTDATA", "DOES THIS WORK"),
-  FileTest(OPEN_READ, "/CHRIS.DISK/TESTDATA", "DOES THIS WORK".encode("UTF-8")),
+  FujiTest(command=FUJICMD.MOUNT_HOST, aux=[A2_HOST, ]),
+  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[A2_DRIVE, 2]),
+  FileTest(OPEN_WRITE, A2_PREFIX + "/TESTDATA", "DOES THIS WORK"),
+  FileTest(OPEN_READ, A2_PREFIX + "/TESTDATA", "DOES THIS WORK".encode("UTF-8")),
+]
+
+COCO_DIR_TESTS = [
+  FujiTest(command=FUJICMD.MOUNT_HOST, aux=[0, ]),
+  FujiTest(command=FUJICMD.OPEN_DIRECTORY, aux=[0, ], data=("/" + '\x00' * 256)[:256]),
+  FujiTest(command=FUJICMD.READ_DIR_ENTRY, aux=[32, 0, ], replyLength=32),
+  FujiTest(command=FUJICMD.CLOSE_DIRECTORY),
 ]
 
 def main():
@@ -70,7 +78,8 @@ def main():
 
       # FIXME - load tests to run from JSON file
       #tests_to_run = FUJI_TESTS
-      tests_to_run = ISSUE_910_TESTS
+      #tests_to_run = ISSUE_910_TESTS
+      tests_to_run = COCO_DIR_TESTS
 
       # Loop through fuji commands
       for test in tests_to_run:
@@ -79,6 +88,7 @@ def main():
 
     # Sleep to allow capturing of any backtraces
     time.sleep(1)
+    print()
 
   # FIXME - display a summary of all tests and their results
 
