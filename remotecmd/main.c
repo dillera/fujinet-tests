@@ -1,5 +1,6 @@
 #include "deviceid.h"
 #include "diskcmd.h"
+#include "filecmd.h"
 #include "hexdump.h"
 #include "endian.h"
 

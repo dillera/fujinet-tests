@@ -1,5 +1,7 @@
 PLATFORM=apple2
 CC=cl65
+# Converts AppleSingle (cc65 output) to AppleDouble (netatalk share)
+UNSINGLE=unsingle
 
 -include defs.mk
 
@@ -9,9 +11,14 @@ endef
 
 all: $(TARGET).$(PLATFORM)
 
-$(TARGET).$(PLATFORM): $(TARGET).bin
-	$(single-to-double)
-$(TARGET).bin: $(OBJS)
+$(TARGET).$(PLATFORM): $(TARGET).a2s
+	if command -v $(UNSINGLE) > /dev/null 2>&1 ; then \
+	  $(single-to-double) ; \
+	else \
+	  cp $< $@ ; \
+	fi
+
+$(TARGET).a2s: $(OBJS)
 	echo OBJS: $(OBJS)
 	$(link-bin)
 

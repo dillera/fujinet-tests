@@ -1,6 +1,11 @@
 DESTDIR=../unified/coco/build/dist/data
 AUTORUN=autorun.dsk
 
+c64:
+	cd .. ; defoogi make -C $(CURDIR)/../fujinet-lib-unified -f $@.mk
+	cd .. ; defoogi make -C $(CURDIR)/remotecmd -f $@.mk
+	rsync -P remotecmd/rmttest.c64 ayce:Sites/loderunner/paumaed/public/rmttest.prg
+
 coco-lwm: $(DESTDIR)/$(AUTORUN)
 
 .PHONY: $(DESTDIR)/$(AUTORUN)

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import struct
 from enum import Enum, IntEnum
 import select
-from fuji_commands import FUJICMD
+from fuji_commands import FUJICMD, FujiCommandArgs
 from hexdump import hexdump
 
 FLAG_WARN = 0x10
@@ -42,17 +42,76 @@ class FujiDevice(Enum):
   MIDI         = 0x99
   FILE         = 0xAA
 
-@dataclass
 class FujiTest:
-  command: int
-  device: int = FujiDevice.THEFUJI
-  aux: list = None
-  data: str = None
-  replyLength: int = 0
-  replyType: RType = None
-  expected: str = None
-  warnOnly: bool = False
-  errorExpected: bool = False
+  def __init__(self, **kwargs):
+    self.command = kwargs.pop('command')
+    self.device = kwargs.pop('device', FujiDevice.THEFUJI)
+    self.replyLength = kwargs.pop('replyLength', 0)
+    self.replyType = kwargs.pop('replyType', None)
+    self.expected = kwargs.pop('expected', None)
+    self.warnOnly = kwargs.pop('warnOnly', False)
+    self.errorExpected = kwargs.pop('errorExpected', False)
+
+    # get arg list for self.command and make sure all args are present
+    # and of required type
+    cmdArgs = FujiCommandArgs.get(self.command, None)
+    if cmdArgs is None:
+      raise ValueError("Unknown Fuji Command", self.command)
+
+    self.assignArgs(cmdArgs, kwargs)
+    return
+
+  def assignArgs(self, cmdArgs, kwargs):
+    reqArgs = cmdArgs['args']
+    if not reqArgs:
+      reqArgs = []
+
+    self.aux = []
+    for required in reqArgs:
+      argName, argType = required.split(':')
+      if argName not in kwargs:
+        raise ValueError(f"{self.command} missing required argument: {argName}")
+
+      value = kwargs.pop(argName)
+
+      if argType[0] in ('i', 'u', 'b'):
+        if argType[0] == 'b' and not isinstance(value, bool):
+          raise ValueError(f"{argName} is not bool")
+        elif not isinstance(value, int):
+          raise ValueError(f"{argName} is not int")
+
+        numBits = 1 if argType == 'b' else int(argType[1:])
+        argMax = 1 << numBits
+        if argType[0] == 'i':
+          argRange = range(argMax // -2, argMax // 2)
+        else:
+          argRange = range(0, argMax)
+
+        if value not in argRange:
+          raise ValueError(f"{argName} value {value}"
+                           f" outside of allowed range {argRange.start}..{argRange.stop - 1}")
+
+        while numBits > 0:
+          self.aux.append(value & 0xFF)
+          value >>= 8
+          numBits -= 8
+
+      elif argType[0] == 's':
+        if not isinstance(value, (str, bytes, bytearray)):
+          raise ValueError(f"{argName} is not str or bytes")
+
+        numBits = int(argType[1:])
+        argMax = 1 << numBits
+
+        if len(value) >= argMax:
+          raise ValueError(f"size of {argName} is longer than maximum {argMax - 1}")
+
+        self.data = value
+
+    if len(kwargs):
+      raise ValueError(f"{self.command} unrecognized args: {', '.join(kwargs.keys())}")
+
+    return
 
   def header(self) -> bytes:
     if not self.aux:

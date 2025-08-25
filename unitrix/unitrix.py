@@ -9,6 +9,8 @@ from fuji_test import *
 from file_test import FileTest
 
 SERVER_PORT = 7357
+MOUNT_READ = 0
+MOUNT_RDWR = 2
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -17,13 +19,13 @@ def build_argparser():
   return parser
 
 FUJI_TESTS = [
-  FujiTest(command=FUJICMD.SET_HOST_PREFIX, aux=[1, ], data="/test", warnOnly=True),
-  FujiTest(command=FUJICMD.GET_HOST_PREFIX, aux=[1, ], warnOnly=True,
+  FujiTest(command=FUJICMD.SET_HOST_PREFIX, host_slot=1, prefix="/test", warnOnly=True),
+  FujiTest(command=FUJICMD.GET_HOST_PREFIX, host_slot=1, warnOnly=True,
               replyLength=MAX_FILENAME_LEN, replyType=RType.NULTermString, expected=b"/test"),
   FujiTest(command=FUJICMD.HASH_INPUT, data="testing"),
-  FujiTest(command=FUJICMD.HASH_COMPUTE, aux=[1, ]),
-  FujiTest(command=FUJICMD.HASH_LENGTH, aux=[1, ], replyLength=1),
-  FujiTest(command=FUJICMD.HASH_OUTPUT, aux=[1, ], replyLength=40),
+  FujiTest(command=FUJICMD.HASH_COMPUTE, algorithm=1),
+  FujiTest(command=FUJICMD.HASH_LENGTH, as_hex=True, replyLength=1),
+  FujiTest(command=FUJICMD.HASH_OUTPUT, as_hex=True, replyLength=40),
 
   # The reply values of these commands will vary depending on config
   FujiTest(command=FUJICMD.READ_HOST_SLOTS, replyLength=256),
@@ -31,30 +33,30 @@ FUJI_TESTS = [
   FujiTest(command=FUJICMD.GET_DEVICE1_FULLPATH, replyLength=256),
 
   # This appears to be a legacy command no longer supported?
-  FujiTest(command=FUJICMD.GET_DEVICE_FULLPATH, aux=[1, ], replyLength=256, warnOnly=True),
+  FujiTest(command=FUJICMD.GET_DEVICE_FULLPATH, device_slot=1, replyLength=256, warnOnly=True),
 
   # Clock tests
   FujiTest(device=FujiDevice.APETIME, command=FUJICMD.GET_TIME_ISO,
            replyLength=25, replyType=RType.NULTermString),
 
   # Mount Image should fail if host is not mounted first:
-  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[1, 0], errorExpected=True),
+  FujiTest(command=FUJICMD.MOUNT_IMAGE, device_slot=1, mode=MOUNT_READ, errorExpected=True),
 ]
 
 A2_PREFIX = "/FNTEST.APPLE2"
 A2_HOST = 4
 A2_DRIVE = 0
 ISSUE_910_TESTS = [
-  FujiTest(command=FUJICMD.MOUNT_HOST, aux=[A2_HOST, ]),
-  FujiTest(command=FUJICMD.MOUNT_IMAGE, aux=[A2_DRIVE, 2]),
+  FujiTest(command=FUJICMD.MOUNT_HOST, host_slot=A2_HOST),
+  FujiTest(command=FUJICMD.MOUNT_IMAGE, device_slot=A2_DRIVE, mode=MOUNT_RDWR),
   FileTest(OPEN_WRITE, A2_PREFIX + "/TESTDATA", "DOES THIS WORK"),
   FileTest(OPEN_READ, A2_PREFIX + "/TESTDATA", "DOES THIS WORK".encode("UTF-8")),
 ]
 
 COCO_DIR_TESTS = [
-  FujiTest(command=FUJICMD.MOUNT_HOST, aux=[0, ]),
-  FujiTest(command=FUJICMD.OPEN_DIRECTORY, aux=[0, ], data=("/" + '\x00' * 256)[:256]),
-  FujiTest(command=FUJICMD.READ_DIR_ENTRY, aux=[32, 0, ], replyLength=32),
+  FujiTest(command=FUJICMD.MOUNT_HOST, host_slot=0),
+  FujiTest(command=FUJICMD.OPEN_DIRECTORY, host_slot=0, path=("/" + '\x00' * 255)[:255]),
+  FujiTest(command=FUJICMD.READ_DIR_ENTRY, maxlen=32, addtl=0, replyLength=32),
   FujiTest(command=FUJICMD.CLOSE_DIRECTORY),
 ]
 
