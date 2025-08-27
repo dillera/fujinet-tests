@@ -9,7 +9,7 @@ class FileTest:
     return
 
   def runTest(self, conn, serial):
-    subtest = FujiTest(device=FujiDevice.FILE, command=FUJICMD.OPEN, aux=[self.mode, ],
+    subtest = FujiTest(device=FujiDevice.FILE, command=FUJICMD.OPEN, mode=self.mode,
            data=self.remotePath, replyLength=1)
     result = subtest.runTest(conn, serial)
     if result != TestResult.PASS:

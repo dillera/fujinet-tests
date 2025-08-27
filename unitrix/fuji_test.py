@@ -51,6 +51,7 @@ class FujiTest:
     self.expected = kwargs.pop('expected', None)
     self.warnOnly = kwargs.pop('warnOnly', False)
     self.errorExpected = kwargs.pop('errorExpected', False)
+    self.data = None
 
     # get arg list for self.command and make sure all args are present
     # and of required type
@@ -81,37 +82,57 @@ class FujiTest:
           raise ValueError(f"{argName} is not int")
 
         numBits = 1 if argType == 'b' else int(argType[1:])
-        argMax = 1 << numBits
-        if argType[0] == 'i':
-          argRange = range(argMax // -2, argMax // 2)
-        else:
-          argRange = range(0, argMax)
-
-        if value not in argRange:
+        if not self.isValidInt(value, numBits, argType[0] == 'i'):
           raise ValueError(f"{argName} value {value}"
                            f" outside of allowed range {argRange.start}..{argRange.stop - 1}")
 
-        while numBits > 0:
-          self.aux.append(value & 0xFF)
-          value >>= 8
-          numBits -= 8
+        self.aux.extend(self.intToBytes(value, numBits))
 
       elif argType[0] == 's':
         if not isinstance(value, (str, bytes, bytearray)):
           raise ValueError(f"{argName} is not str or bytes")
 
-        numBits = int(argType[1:])
-        argMax = 1 << numBits
+        if len(argType) > 1:
+          numBits = int(argType[1:])
+          if not self.isValidInt(len(value), numBits, False):
+            raise ValueError(f"size of {argName} is longer than maximum {argMax - 1}")
 
-        if len(value) >= argMax:
-          raise ValueError(f"size of {argName} is longer than maximum {argMax - 1}")
+          self.aux.extend(self.intToBytes(len(value), numBits))
 
         self.data = value
+
+      elif argType[0] == 'f':
+        if not isinstance(value, (str, bytes, bytearray)):
+          raise ValueError(f"{argName} is not str or bytes")
+
+        numBytes = int(argType[1:])
+        if len(value) > numBytes:
+          raise ValueError(f"size of {argName} exceeds maximum {numBytes}")
+
+        self.data = (value + '\x00' * numBytes)[:numBytes]
 
     if len(kwargs):
       raise ValueError(f"{self.command} unrecognized args: {', '.join(kwargs.keys())}")
 
     return
+
+  @staticmethod
+  def isValidInt(value, numBits, isSigned):
+    intMax = 1 << numBits
+    if isSigned:
+      intRange = range(intMax // -2, intMax // 2)
+    else:
+      intRange = range(0, intMax)
+    return value in intRange
+
+  @staticmethod
+  def intToBytes(value, numBits):
+    bdata = []
+    while numBits > 0:
+      bdata.append(value & 0xFF)
+      value >>= 8
+      numBits -= 8
+    return bdata
 
   def header(self) -> bytes:
     if not self.aux:
@@ -149,7 +170,7 @@ class FujiTest:
 
     serial.clearBuffer()
 
-    print("Testing command", self.command)
+    print(f"Testing command {self.command} {hex(self.command.value)}")
     hdata = self.header()
     hexdump(hdata)
     self.sendall(hdata)
@@ -164,6 +185,7 @@ class FujiTest:
     print("Result:", self.errcode)
 
     if not self.errcode and self.replyLength:
+      print("Expecting reply data");
       self.reply = self.recv(4096)
 
       if self.reply is not None:

@@ -14,15 +14,12 @@
 #include <conio.h>
 #endif /* _CMOC_VERSION_ */
 
-// FIXME - get config from file or user
-#define CONTROLLER "N:TCP://10.4.0.242:7357"
-//#define CONTROLLER "N:TCP://10.4.0.102:7357"
-
 #define FLAG_WARN 0x10
 
 AdapterConfigExtended ace;
 TestCommand tc_buf;
 uint8_t buffer[256];
+char controller[256];
 
 int main()
 {
@@ -45,8 +42,17 @@ int main()
   if (fail_count)
     exit(1);
 
+  printf("Hostname/IP address of test controller? ");
+  // Why allocate a second buffer when I can use the back half of the buffer I have?
+  fgets(&controller[128], sizeof(controller) - 128, stdin);
+  rlen = strlen(&controller[128]);
+  while (controller[128+rlen-1] == '\n')
+    rlen--;
+  controller[128+rlen] = 0;
+  sprintf(controller, "N:TCP://%s:7357", &controller[128]);
+
   printf("Opening controller\n");
-  err = network_open(CONTROLLER, OPEN_MODE_RW, 0);
+  err = network_open(controller, OPEN_MODE_RW, 0);
   printf("Connection: %d\n", err);
   if (err != FN_ERR_OK) {
     printf("Unable to open connection to test controller: %d\n", err);
@@ -54,13 +60,16 @@ int main()
   }
 
   for (;;) {
+    printf("Awaiting test\n");
     did_fail = 0;
     // Read command, flags, and 4 aux bytes,
-    rlen = network_read(CONTROLLER, (unsigned char *) &tc_buf, sizeof(tc_buf));
+    rlen = network_read(controller, (unsigned char *) &tc_buf, sizeof(tc_buf));
     if (rlen != sizeof(tc_buf)) {
-      did_fail = 1;
-      fail_count++;
-      printf("Network error: %d\n", rlen);
+      if (rlen) {
+        did_fail = 1;
+        fail_count++;
+        printf("Network error: %d\n", rlen);
+      }
       break;
     }
 
@@ -84,12 +93,12 @@ int main()
     if (tc_buf.data_len) {
       for (;;) {
 	// Wait for data to become available
-	if (network_status(CONTROLLER, &avail, &status, &err))
+	if (network_status(controller, &avail, &status, &err))
 	  break;
 	if (avail)
 	  break;
       }
-      datalen = network_read(CONTROLLER, buffer, tc_buf.data_len);
+      datalen = network_read(controller, buffer, tc_buf.data_len);
       data = buffer;
       printf("Received data of length: %d\n", datalen);
       if (datalen != tc_buf.data_len) {
@@ -122,21 +131,24 @@ int main()
 			      tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 			      data, datalen, reply, tc_buf.reply_len);
     }
-    printf("Result: %d 0x%02x\n", success, tc_buf.flags);
 
     if (!(tc_buf.flags & FLAG_WARN) && !success) {
       did_fail = 1;
       fail_count++;
-      break;
     }
 
+    printf("Result: %d %d 0x%02x\n", success, did_fail, tc_buf.flags);
     // Send results back to controller
-    wlen = network_write(CONTROLLER, &did_fail, 1);
-    if (success && tc_buf.reply_len)
-      wlen = network_write(CONTROLLER, reply, tc_buf.reply_len);
+    wlen = network_write(controller, &did_fail, 1);
+    if (did_fail)
+      break;
+    else if (tc_buf.reply_len) {
+      printf("Sending reply data: %d\n", tc_buf.reply_len);
+      wlen = network_write(controller, reply, tc_buf.reply_len);
+    }
   }
 
-  network_close(CONTROLLER);
+  network_close(controller);
 
   if (fail_count) {
     printf("********************\n");

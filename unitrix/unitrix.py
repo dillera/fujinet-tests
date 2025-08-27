@@ -55,10 +55,19 @@ ISSUE_910_TESTS = [
 
 COCO_DIR_TESTS = [
   FujiTest(command=FUJICMD.MOUNT_HOST, host_slot=0),
-  FujiTest(command=FUJICMD.OPEN_DIRECTORY, host_slot=0, path=("/" + '\x00' * 255)[:255]),
+  FujiTest(command=FUJICMD.OPEN_DIRECTORY, host_slot=0, path="/"),
   FujiTest(command=FUJICMD.READ_DIR_ENTRY, maxlen=32, addtl=0, replyLength=32),
   FujiTest(command=FUJICMD.CLOSE_DIRECTORY),
 ]
+
+def print_results(tests):
+  print("Test results:")
+
+  width = max([len(f"{test.command}") for test in tests])
+  for test in tests:
+    print(f"{test.command:<{width}} {test.result.name}")
+
+  return
 
 def main():
   args = build_argparser().parse_args()
@@ -79,20 +88,22 @@ def main():
       # FIXME - get FujiNet firmware version and type of machine running tests
 
       # FIXME - load tests to run from JSON file
-      #tests_to_run = FUJI_TESTS
+      tests_to_run = FUJI_TESTS
       #tests_to_run = ISSUE_910_TESTS
-      tests_to_run = COCO_DIR_TESTS
+      #tests_to_run = COCO_DIR_TESTS
 
       # Loop through fuji commands
       for test in tests_to_run:
-        if test.runTest(conn, guruWatch) >= TestResult.FAIL:
+        result = test.runTest(conn, guruWatch)
+        test.result = result
+        if result >= TestResult.FAIL:
           break
 
     # Sleep to allow capturing of any backtraces
     time.sleep(1)
     print()
 
-  # FIXME - display a summary of all tests and their results
+  print_results(tests_to_run)
 
   server.close()
   return
