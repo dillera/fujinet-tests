@@ -74,6 +74,19 @@ def print_results(tests):
 
   return
 
+def get_ip():
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  s.settimeout(0)
+  try:
+    # doesn't even have to be reachable
+    s.connect(('10.254.254.254', 1))
+    IP = s.getsockname()[0]
+  except Exception:
+    IP = '127.0.0.1'
+  finally:
+    s.close()
+  return IP
+
 def main():
   args = build_argparser().parse_args()
 
@@ -84,7 +97,7 @@ def main():
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(("0.0.0.0", SERVER_PORT))
     server.listen(1)
-    print(f"Listening on {server.getsockname()[0]}:{server.getsockname()[1]}...")
+    print(f"Listening on {get_ip()}:{server.getsockname()[1]}...")
 
     conn, addr = server.accept()
     with conn:
