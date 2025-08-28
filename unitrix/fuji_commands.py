@@ -85,6 +85,16 @@ class FUJICMD(Enum):
   GET_TIME_SOS               = ord('S')
   GET_TIME_ISO               = ord('I')
 
+# Argument types:
+#    i8: 8-bit integer
+#   i16: 16-bit integer
+#    u8: 8-bit unsigned
+#   u16: 16-bit unsigned
+#     s: variable length string/bytes
+#    s8: variable length string/bytes with 8-bit length
+#   s16: variable length string/bytes with 16-bit length
+#  fNNN: fixed length string/bytes which will be padded to length
+
 FujiCommandArgs = {
   FUJICMD.RESET: {'args': None, 'return': None},
   FUJICMD.GET_SSID: {'args': None, 'return': ["data:s8", ]},
@@ -98,9 +108,9 @@ FujiCommandArgs = {
   FUJICMD.READ_DIR_ENTRY: {'args': ["maxlen:u16", "addtl:u8"], 'return': ["entry:s7", ]},
   FUJICMD.CLOSE_DIRECTORY: {'args': None, 'return': None},
   FUJICMD.READ_HOST_SLOTS: {'args': None, 'return': ["datas:s8", ]},
-  FUJICMD.WRITE_HOST_SLOTS: {'args': ["config:s8", ], 'return': None},
+  FUJICMD.WRITE_HOST_SLOTS: {'args': ["config:f256", ], 'return': None},
   FUJICMD.READ_DEVICE_SLOTS: {'args': None, 'return': ["data:s8", ]},
-  FUJICMD.WRITE_DEVICE_SLOTS: {'args': ["config:s8", ], 'return': None},
+  FUJICMD.WRITE_DEVICE_SLOTS: {'args': ["config:f352", ], 'return': None},
   FUJICMD.ENABLE_UDPSTREAM: {'args': None, 'return': None},
   FUJICMD.SET_BAUDRATE: {'args': None, 'return': None},
   FUJICMD.GET_WIFI_ENABLED: {'args': None, 'return': ["data:s8", ]},
@@ -111,7 +121,7 @@ FujiCommandArgs = {
   FUJICMD.GET_DIRECTORY_POSITION: {'args': None, 'return': ["position:u16", ]},
   FUJICMD.SET_DIRECTORY_POSITION: {'args': ["position:u16", ], 'return': None},
   FUJICMD.SET_HSIO_INDEX: {'args': None, 'return': None},
-  FUJICMD.SET_DEVICE_FULLPATH: {'args': ["device_slot:u8", "host_slot:u8", "mode:u8", "filename:s8"], 'return': None},
+  FUJICMD.SET_DEVICE_FULLPATH: {'args': ["device_slot:u8", "host_slot:u8", "mode:u8", "filename:f256"], 'return': None},
   FUJICMD.SET_HOST_PREFIX: {'args': ["host_slot:u8", "prefix:f256"], 'return': None},
   FUJICMD.GET_HOST_PREFIX: {'args': ["host_slot:u8", ], 'return': ["prefix:s8", ]},
   FUJICMD.SET_SIO_EXTERNAL_CLOCK: {'args': None, 'return': None},

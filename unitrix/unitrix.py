@@ -7,6 +7,7 @@ import socket
 from serial_monitor import SerialMonitor
 from fuji_test import *
 from file_test import FileTest
+from disk_test import DiskTest
 
 SERVER_PORT = 7357
 MOUNT_READ = 0
@@ -60,6 +61,10 @@ COCO_DIR_TESTS = [
   FujiTest(command=FUJICMD.CLOSE_DIRECTORY),
 ]
 
+DOS33_TESTS = [
+  DiskTest(MOUNT_READ, "apps.irata.online", "/APPLE_II/Testing/dos33.woz", 2),
+]
+
 def print_results(tests):
   print("Test results:")
 
@@ -88,9 +93,10 @@ def main():
       # FIXME - get FujiNet firmware version and type of machine running tests
 
       # FIXME - load tests to run from JSON file
-      tests_to_run = FUJI_TESTS
+      #tests_to_run = FUJI_TESTS
       #tests_to_run = ISSUE_910_TESTS
       #tests_to_run = COCO_DIR_TESTS
+      tests_to_run = DOS33_TESTS
 
       # Loop through fuji commands
       for test in tests_to_run:
