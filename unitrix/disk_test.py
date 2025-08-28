@@ -32,22 +32,23 @@ class DiskTest:
     self.mode = mode
     self.hostURL = hostURL
     self.remotePath = remotePath
+    self.driveSlot = driveSlot
     return
 
   def runTest(self, conn, serial):
     subtest = FujiTest(command=FUJICMD.READ_HOST_SLOTS,
-                       replyLength=MAX_HOSTS * MAX_HOSTNAME_LEN),
+                       replyLength=MAX_HOSTS * MAX_HOSTNAME_LEN)
     result = subtest.runTest(conn, serial)
     if result != TestResult.PASS:
       return result
 
     hostConfig = HostConfig(subtest.reply)
-    idx = hostConfig.matchingSlot(hostURL)
+    idx = hostConfig.matchingSlot(self.hostURL)
     if idx is None:
       idx = hostConfig.firstBlank()
       if idx is None:
         idx = MAX_HOSTS - 1
-      hostConfigs.setSlotURL(idx, hostURL)
+      hostConfigs.setSlotURL(idx, self.hostURL)
 
       subtest = FujiTest(command=FUJICMD.WRITE_HOST_SLOTS, config=hostConfig.data)
       result = subtest.runTest(conn, serial)
@@ -61,7 +62,7 @@ class DiskTest:
 
     subtest = FujiTest(command=FUJICMD.SET_DEVICE_FULLPATH,
                        host_slot=idx, device_slot=self.driveSlot, mode=self.mode,
-                       filename=remotePath)
+                       filename=self.remotePath)
     result = subtest.runTest(conn, serial)
     if result != TestResult.PASS:
       return result

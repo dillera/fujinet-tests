@@ -62,15 +62,16 @@ COCO_DIR_TESTS = [
 ]
 
 DOS33_TESTS = [
-  DiskTest(MOUNT_READ, "apps.irata.online", "/APPLE_II/Testing/dos33.woz", 2),
+  DiskTest(MOUNT_READ, "apps.irata.online", "/APPLE_II/Testing/dos33.woz", 4),
 ]
 
 def print_results(tests):
   print("Test results:")
 
-  width = max([len(f"{test.command}") for test in tests])
-  for test in tests:
-    print(f"{test.command:<{width}} {test.result.name}")
+  names = [f"{getattr(test, 'command', type(test))}" for test in tests]
+  width = max([len(f"{n}") for n in names])
+  for idx, test in enumerate(tests):
+    print(f"{names[idx]:<{width}} {test.result.name}")
 
   return
 
