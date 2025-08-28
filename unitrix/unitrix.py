@@ -62,7 +62,7 @@ COCO_DIR_TESTS = [
 ]
 
 DOS33_TESTS = [
-  DiskTest(MOUNT_READ, "apps.irata.online", "/APPLE_II/Testing/dos33.woz", 4),
+  DiskTest(MOUNT_READ, "SD", "/NEWDO1.DO", 4),
 ]
 
 def print_results(tests):
