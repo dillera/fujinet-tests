@@ -24,7 +24,7 @@ class TestResult(IntEnum):
 class ErrCode(Enum):
   ReceiveError = -1
   DataMismatch = -2
-  GuruError    = -2
+  GuruError    = -3
 
 class FujiDevice(Enum):
   DISK         = 0x31
@@ -44,26 +44,43 @@ class FujiDevice(Enum):
 
 class FujiTest:
   def __init__(self, **kwargs):
-    self.command = kwargs.pop('command')
+    try:
+      command = kwargs.pop('command')
+      if isinstance(command, str):
+        command = FUJICMD[command.upper()]
+      self.command = FUJICMD(command)
+    except (TypeError, ValueError):
+      raise ValueError("Unknown command:", command)
+
     self.device = kwargs.pop('device', FujiDevice.THEFUJI)
-    self.replyLength = kwargs.pop('replyLength', 0)
-    self.replyType = kwargs.pop('replyType', None)
     self.expected = kwargs.pop('expected', None)
     self.warnOnly = kwargs.pop('warnOnly', False)
     self.errorExpected = kwargs.pop('errorExpected', False)
     self.data = None
 
+    self.replyLength = kwargs.pop('replyLength', 0)
+    self.replyType = kwargs.pop('replyType', None)
+    
     # get arg list for self.command and make sure all args are present
     # and of required type
     cmdArgs = FujiCommandArgs.get(self.command, None)
     if cmdArgs is None:
       raise ValueError("Unknown Fuji Command", self.command)
 
+    reply = cmdArgs.get('reply', None)
+    if reply is not None:
+      self.replyLength = 0
+      for field in reply:
+        replyName, replyType = field.split(':')
+        self.replyLength += self.byteLength(replyType)
+        if replyType[0] == 'n':
+          self.replyType = RType.NULTermString
+      
     self.assignArgs(cmdArgs, kwargs)
     return
 
   def assignArgs(self, cmdArgs, kwargs):
-    reqArgs = cmdArgs['args']
+    reqArgs = cmdArgs.get('args', None)
     if not reqArgs:
       reqArgs = []
 
@@ -79,7 +96,7 @@ class FujiTest:
         if argType[0] == 'b' and not isinstance(value, bool):
           raise ValueError(f"{argName} is not bool")
         elif not isinstance(value, int):
-          raise ValueError(f"{argName} is not int")
+          raise ValueError(f"{argName} is not int", value)
 
         numBits = 1 if argType == 'b' else int(argType[1:])
         if not self.isValidInt(value, numBits, argType[0] == 'i'):
@@ -125,6 +142,20 @@ class FujiTest:
       intRange = range(0, intMax)
     return value in intRange
 
+  @staticmethod
+  def byteLength(argType):
+    if argType[0] == 'b':
+      return 1
+
+    if argType[0] in ('i', 'u', 's'):
+      numBits = int(argType[1:])
+      return (numBits + 7) // 8
+
+    if argType[0] in ('f', 'n'):
+      return int(argType[1:])
+
+    return None
+    
   @staticmethod
   def intToBytes(value, numBits):
     bdata = []

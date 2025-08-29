@@ -4,10 +4,11 @@ import sys
 import requests
 import time
 import socket
+import json
 from serial_monitor import SerialMonitor
 from fuji_test import *
 from file_test import FileTest
-from disk_test import DiskTest
+from disk_test import MountTest
 
 SERVER_PORT = 7357
 MOUNT_READ = 0
@@ -16,13 +17,15 @@ MOUNT_RDWR = 2
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("serial", help="serial port")
+  parser.add_argument(metavar="tests.json", dest="tests_json", nargs="+",
+                      help="json file describing tests to run")
   parser.add_argument("--baud", type=int, default=460800, help="baud rate")
   return parser
 
 FUJI_TESTS = [
   FujiTest(command=FUJICMD.SET_HOST_PREFIX, host_slot=1, prefix="/test", warnOnly=True),
   FujiTest(command=FUJICMD.GET_HOST_PREFIX, host_slot=1, warnOnly=True,
-              replyLength=MAX_FILENAME_LEN, replyType=RType.NULTermString, expected=b"/test"),
+           replyLength=MAX_FILENAME_LEN, replyType=RType.NULTermString, expected=b"/test"),
   FujiTest(command=FUJICMD.HASH_INPUT, data="testing"),
   FujiTest(command=FUJICMD.HASH_COMPUTE, algorithm=1),
   FujiTest(command=FUJICMD.HASH_LENGTH, as_hex=True, replyLength=1),
@@ -62,16 +65,22 @@ COCO_DIR_TESTS = [
 ]
 
 DOS33_TESTS = [
-  DiskTest(MOUNT_READ, "SD", "/NEWDO1.DO", 4),
+  MountTest(MOUNT_READ, "SD", "/NEWDO1.DO", 4),
 ]
 
-def print_results(tests):
+def print_results(test_series):
   print("Test results:")
 
-  names = [f"{getattr(test, 'command', type(test))}" for test in tests]
-  width = max([len(f"{n}") for n in names])
-  for idx, test in enumerate(tests):
-    print(f"{names[idx]:<{width}} {test.result.name}")
+  for tests in test_series:
+    names = [f"{getattr(test, 'command', test.__class__.__name__)}" for test in tests]
+    width = max([len(f"{n}") for n in names])
+    for idx, test in enumerate(tests):
+      status = getattr(test, 'result', None)
+      if status is None:
+        status = 'NOT RUN'
+      else:
+        status = status.name
+      print(f"{names[idx]:<{width}} {status}")
 
   return
 
@@ -88,12 +97,26 @@ def get_ip():
     s.close()
   return IP
 
+def loadTests(path):
+  with open(path, "r") as f:
+    test_list = json.load(f)
+
+  tests = []
+  for test in test_list:
+    test_type = test.pop('test', "Fuji")
+    test_class = globals()[test_type + "Test"]
+    tests.append(test_class(**test))
+    
+  return tests
+
 def main():
   args = build_argparser().parse_args()
 
   guruWatch = SerialMonitor(args.serial, args.baud)
   guruWatch.start()
 
+  test_series = [loadTests(path) for path in args.tests_json]
+  
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(("0.0.0.0", SERVER_PORT))
@@ -106,24 +129,19 @@ def main():
 
       # FIXME - get FujiNet firmware version and type of machine running tests
 
-      # FIXME - load tests to run from JSON file
-      #tests_to_run = FUJI_TESTS
-      #tests_to_run = ISSUE_910_TESTS
-      #tests_to_run = COCO_DIR_TESTS
-      tests_to_run = DOS33_TESTS
-
-      # Loop through fuji commands
-      for test in tests_to_run:
-        result = test.runTest(conn, guruWatch)
-        test.result = result
-        if result >= TestResult.FAIL:
-          break
+      for test_group in test_series:
+        # Loop through fuji commands
+        for test in test_group:
+          result = test.runTest(conn, guruWatch)
+          test.result = result
+          if result >= TestResult.FAIL:
+            break
 
     # Sleep to allow capturing of any backtraces
     time.sleep(1)
     print()
 
-  print_results(tests_to_run)
+  print_results(test_series)
 
   server.close()
   return

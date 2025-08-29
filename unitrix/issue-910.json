@@ -1,0 +1,23 @@
+[
+    {
+	"command": "mount_host",
+	"host_slot": 4
+    },
+    {
+	"command": "mount_image",
+	"device_slot": 0,
+	"mode": 2
+    },
+    {
+	"test": "File",
+	"mode": "w",
+	"filename": "/FNTEST.APPLE2/TESTDATA",
+	"data": "DOES THIS WORK"
+    },
+    {
+	"test": "File",
+	"mode": "r",
+	"filename": "/FNTEST.APPLE2/TESTDATA",
+	"data": "DOES THIS WORK"
+    }
+]

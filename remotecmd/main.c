@@ -15,11 +15,14 @@
 #endif /* _CMOC_VERSION_ */
 
 #define FLAG_WARN 0x10
+#define LAST_CONTROLLER "UNITRIX.TXT"
 
 AdapterConfigExtended ace;
 TestCommand tc_buf;
 uint8_t buffer[256];
 char controller[256];
+
+#define MIDPOINT (sizeof(controller) / 2)
 
 int main()
 {
@@ -29,6 +32,7 @@ int main()
   bool success, did_fail;
   uint16_t avail;
   uint8_t status, err;
+  FILE *file;
   uint8_t fail_count = 0;
 
 
@@ -42,14 +46,37 @@ int main()
   if (fail_count)
     exit(1);
 
+  buffer[0] = 0;
+  file = fopen(LAST_CONTROLLER, "r");
+  if (file) {
+    fgets((char *) buffer, sizeof(buffer), file);
+    rlen = strlen((char *) buffer);
+    while (buffer[rlen-1] == '\n')
+      rlen--;
+    buffer[rlen] = 0;
+    fclose(file);
+  }
+  
   printf("Hostname/IP address of test controller? ");
+  if (buffer[0])
+    printf("[%s] ", buffer);
+
   // Why allocate a second buffer when I can use the back half of the buffer I have?
-  fgets(&controller[128], sizeof(controller) - 128, stdin);
-  rlen = strlen(&controller[128]);
-  while (controller[128+rlen-1] == '\n')
+  fgets(&controller[MIDPOINT], sizeof(controller) - MIDPOINT, stdin);
+  rlen = strlen(&controller[MIDPOINT]);
+  while (controller[MIDPOINT+rlen-1] == '\n')
     rlen--;
-  controller[128+rlen] = 0;
-  sprintf(controller, "N:TCP://%s:7357", &controller[128]);
+  controller[MIDPOINT+rlen] = 0;
+  if (!controller[MIDPOINT])
+    strcpy(&controller[MIDPOINT], (char *) buffer);
+
+  file = fopen(LAST_CONTROLLER, "w");
+  if (file) {
+    fprintf(file, "%s\n", &controller[MIDPOINT]);
+    fclose(file);
+  }
+  
+  sprintf(controller, "N:TCP://%s:7357", &controller[MIDPOINT]);
 
   printf("Opening controller\n");
   err = network_open(controller, OPEN_MODE_RW, 0);

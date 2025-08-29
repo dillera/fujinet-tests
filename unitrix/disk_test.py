@@ -27,7 +27,7 @@ class HostConfig:
     self.slots[idx] = url
     return
 
-class DiskTest:
+class MountTest:
   def __init__(self, mode, hostURL, remotePath, driveSlot):
     self.mode = mode
     self.hostURL = hostURL
@@ -74,3 +74,6 @@ class DiskTest:
       return result
 
     return TestResult.PASS
+
+# FIXME - add a way to get disk volumes as seen by computer. List
+#         should include drive number, volume name/prefix

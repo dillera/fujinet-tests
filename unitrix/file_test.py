@@ -2,15 +2,15 @@ from fuji_test import *
 from fuji_commands import FUJICMD
 
 class FileTest:
-  def __init__(self, mode, remotePath, data):
+  def __init__(self, mode, filename, data):
     self.mode = mode
-    self.remotePath = remotePath
+    self.filename = filename
     self.data = data
     return
 
   def runTest(self, conn, serial):
     subtest = FujiTest(device=FujiDevice.FILE, command=FUJICMD.OPEN, mode=self.mode,
-           data=self.remotePath, replyLength=1)
+           data=self.filename, replyLength=1)
     result = subtest.runTest(conn, serial)
     if result != TestResult.PASS:
       return result
