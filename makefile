@@ -8,11 +8,11 @@ endef
 
 apple2:
 	$(defoogi-make)
-	rsync -P remotecmd/rmttest.po ayce:Sites/loderunner/paumaed/disks/rmttest.po
+	rsync -P remotecmd/rmttest.po .
 
 c64:
 	$(defoogi-make)
-	rsync -P remotecmd/rmttest.c64 ayce:Sites/loderunner/paumaed/public/rmttest.prg
+	rsync -P remotecmd/rmttest.c64 localhost:rmttest.prg
 
 coco-lwm: $(DESTDIR)/$(AUTORUN)
 

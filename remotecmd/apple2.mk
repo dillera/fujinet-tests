@@ -24,9 +24,10 @@ $(TARGET).a2s: $(OBJS)
 
 $(OBJDIR)/main.o: $(FNLIB_LIBS)/fujinet.$(PLATFORM).lib
 
-$(TARGET).po: $(TARGET).a2s
-	ac -pro140 $@ $(TARGET)
-	cat $< | ac -as $@ $(TARGET)
-
+#$(TARGET).po: $(TARGET).a2s
+#	ac -pro140 $@ $(TARGET)
+#	cat $< | ac -as $@ $(TARGET)
+#
 -include cc65.common.mk
 -include post.mk
+
