@@ -52,9 +52,16 @@
     },
 
     {
-	"command": "mount_image",
-	"device_slot": 1,
-	"mode": 64,
-	"errorExpected": true
+    	"command": "mount_image",
+    	"device_slot": 1,
+    	"mode": 64,
+    	"errorExpected": true
+    },
+
+    {
+      "test": "DiskIO",
+      "device_slot": 0,
+      "filename": "/FNTEST.APPLE2/UNITRIX.DAT",
+      "data": "HELLO DISK"
     }
 ]

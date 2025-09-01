@@ -1,4 +1,6 @@
 from fuji_test import *
+import struct
+import select
 from fuji_commands import FUJICMD
 
 MAX_HOSTS = 8
@@ -77,3 +79,104 @@ class MountTest:
 
 # FIXME - add a way to get disk volumes as seen by computer. List
 #         should include drive number, volume name/prefix
+
+# Harness-level Apple II disk I/O test using remotecmd DISK pseudo-commands.
+# These are not FUJICMD values; they are handled OS-side in remotecmd/diskcmd.c
+# Command IDs (must match remotecmd/diskcmd.h):
+#   OPEN=0x10, READ=0x11, WRITE=0x12, CLOSE=0x13, SEEK=0x14, STAT=0x15
+DISKCMD_OPEN  = 0x10
+DISKCMD_READ  = 0x11
+DISKCMD_WRITE = 0x12
+DISKCMD_CLOSE = 0x13
+DISKCMD_SEEK  = 0x14
+DISKCMD_STAT  = 0x15
+
+DISK_OPEN_READ  = 0x40
+DISK_OPEN_WRITE = 0x80
+
+class DiskIOTest:
+  def __init__(self, device_slot, filename, data):
+    # device_slot: 0..(0x3F-0x31) maps to DISK devices 0x31..0x3F
+    self.device_slot = device_slot
+    self.filename = filename
+    self.data = data if isinstance(data, (bytes, bytearray)) else data.encode('utf-8')
+    return
+
+  def _pack_header(self, device, command, flags, aux, data_len, reply_len):
+    # aux is list of up to 4 bytes
+    aux = (aux + [0, 0, 0, 0])[:4]
+    return struct.pack("<BB B BBBB HH", device, command, flags, *aux, data_len, reply_len)
+
+  def _send(self, conn, serial, header, payload=None):
+    serial.clearBuffer()
+    conn.sendall(header)
+    if payload:
+      conn.sendall(payload)
+    # read 1-byte result
+    readable, _, _ = select.select([conn, serial.errorSocket], [], [])
+    if conn in readable:
+      res = conn.recv(1)
+      return res[0] if res else 0xFF
+    return 0xFF
+
+  def runTest(self, conn, serial):
+    device = 0x31 + (self.device_slot & 0x0F)
+
+    # OPEN for write
+    hdr = self._pack_header(device, DISKCMD_OPEN, 0, [DISK_OPEN_WRITE], len(self.filename), 1)
+    res = self._send(conn, serial, hdr, self.filename.encode('utf-8'))
+    if res:
+      return TestResult.FAIL
+    readable, _, _ = select.select([conn, serial.errorSocket], [], [])
+    if conn not in readable:
+      return TestResult.FAIL
+    handle = conn.recv(1)
+    if not handle:
+      return TestResult.FAIL
+    handle = handle[0]
+
+    # WRITE data
+    hdr = self._pack_header(device, DISKCMD_WRITE, 0, [handle], len(self.data), 0)
+    res = self._send(conn, serial, hdr, self.data)
+    if res:
+      return TestResult.FAIL
+
+    # CLOSE
+    hdr = self._pack_header(device, DISKCMD_CLOSE, 0, [handle], 0, 0)
+    res = self._send(conn, serial, hdr)
+    if res:
+      return TestResult.FAIL
+
+    # OPEN for read
+    hdr = self._pack_header(device, DISKCMD_OPEN, 0, [DISK_OPEN_READ], len(self.filename), 1)
+    res = self._send(conn, serial, hdr, self.filename.encode('utf-8'))
+    if res:
+      return TestResult.FAIL
+    readable, _, _ = select.select([conn, serial.errorSocket], [], [])
+    if conn not in readable:
+      return TestResult.FAIL
+    handle = conn.recv(1)
+    if not handle:
+      return TestResult.FAIL
+    handle = handle[0]
+
+    # READ back
+    hdr = self._pack_header(device, DISKCMD_READ, 0, [handle], 0, len(self.data))
+    res = self._send(conn, serial, hdr)
+    if res:
+      return TestResult.FAIL
+    # Expect reply data
+    readable, _, _ = select.select([conn, serial.errorSocket], [], [])
+    if conn not in readable:
+      return TestResult.FAIL
+    reply = conn.recv(len(self.data))
+    if reply != self.data:
+      return TestResult.FAIL
+
+    # CLOSE
+    hdr = self._pack_header(device, DISKCMD_CLOSE, 0, [handle], 0, 0)
+    res = self._send(conn, serial, hdr)
+    if res:
+      return TestResult.FAIL
+
+    return TestResult.PASS

@@ -8,7 +8,7 @@ import json
 from serial_monitor import SerialMonitor
 from fuji_test import *
 from file_test import FileTest
-from disk_test import MountTest
+from disk_test import MountTest, DiskIOTest
 
 SERVER_PORT = 7357
 MOUNT_READ = 0

@@ -53,6 +53,17 @@ class FujiTest:
       raise ValueError("Unknown command:", command)
 
     self.device = kwargs.pop('device', FujiDevice.THEFUJI)
+    # Allow device to be passed as string (e.g., "disk", "file", "apetime") or int
+    if isinstance(self.device, str):
+      try:
+        self.device = FujiDevice[self.device.upper()]
+      except KeyError:
+        raise ValueError(f"Unknown device: {self.device}")
+    elif isinstance(self.device, int):
+      try:
+        self.device = FujiDevice(self.device)
+      except ValueError:
+        raise ValueError(f"Unknown device value: {self.device}")
     self.expected = kwargs.pop('expected', None)
     self.warnOnly = kwargs.pop('warnOnly', False)
     self.errorExpected = kwargs.pop('errorExpected', False)
