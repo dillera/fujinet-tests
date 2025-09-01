@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <stdbool.h>
 #endif
 
 #define MAX_OPEN_FILES 8
@@ -12,7 +13,8 @@ static FILE *disk_handles[MAX_OPEN_FILES];
 
 static int8_t avail_handle()
 {
-  for (int i = 0; i < MAX_OPEN_FILES; i++)
+  int i;
+  for (i = 0; i < MAX_OPEN_FILES; i++)
     if (!disk_handles[i])
       return i;
   return -1;
@@ -111,17 +113,18 @@ bool disk_command(TestCommand *cmd, void *data, void *reply, size_t reply_max)
     if (!valid_handle(cmd->aux1))
       return false;
     {
-      long cur = ftell(disk_handles[cmd->aux1]);
+      long cur, size;
+      cur = ftell(disk_handles[cmd->aux1]);
       if (cur < 0) cur = 0;
       if (fseek(disk_handles[cmd->aux1], 0L, SEEK_END) != 0)
         return false;
-      long end = ftell(disk_handles[cmd->aux1]);
-      if (end < 0) end = 0;
+      size = ftell(disk_handles[cmd->aux1]);
+      if (size < 0) size = 0;
       if (fseek(disk_handles[cmd->aux1], cur, SEEK_SET) != 0)
         return false;
       if (reply_max < 4)
         return false;
-      u32_to_le((uint32_t)end, (uint8_t*)reply);
+      u32_to_le((uint32_t)size, (uint8_t*)reply);
       cmd->reply_len = 4;
       return true;
     }
