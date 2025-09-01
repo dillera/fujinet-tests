@@ -10,7 +10,6 @@ $(info CFILES: $(CFILES))
 all: $(ALL_TARGETS)
 
 
-
 $(TARGET).%: $(CFILES)
 	$(MAKE) -f $*.mk
 
@@ -18,7 +17,7 @@ $(TARGET).%: $(CFILES)
 SUFFIX := .a2s
 DISK_TASKS += .po
 AUTOBOOT := -l
-APPLE_TOOLS_DIR := /home/dillera/code/fujinet-build-tools/apple-tools
+APPLE_TOOLS_DIR := ../tools/apple-tools
 
 DIST_DIR := .
 PROGRAM_TGT := rmttest
