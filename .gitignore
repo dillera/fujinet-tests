@@ -67,3 +67,6 @@ remotecmd/rmttest.*
 
 venv/
 .venv/
+
+_cache
+
