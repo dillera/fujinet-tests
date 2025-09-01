@@ -64,3 +64,8 @@ dkms.conf
 __pycache__
 cmdtest/cmdtest.*
 remotecmd/rmttest.*
+
+venv/
+.venv
+_cache/
+
