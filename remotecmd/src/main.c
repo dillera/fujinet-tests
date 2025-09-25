@@ -32,7 +32,9 @@ int main()
   bool success, did_fail;
   uint16_t avail;
   uint8_t status, err;
+#ifndef _CMOC_VERSION_
   FILE *file;
+#endif /* _CMOC_VERSION_ */
   uint8_t fail_count = 0;
 
 
@@ -46,6 +48,7 @@ int main()
   if (fail_count)
     exit(1);
 
+#ifndef _CMOC_VERSION_
   buffer[0] = 0;
   file = fopen(LAST_CONTROLLER, "r");
   if (file) {
@@ -56,7 +59,7 @@ int main()
     buffer[rlen] = 0;
     fclose(file);
   }
-  
+
   printf("Hostname/IP address of test controller? ");
   if (buffer[0])
     printf("[%s] ", buffer);
@@ -75,7 +78,8 @@ int main()
     fprintf(file, "%s\n", &controller[MIDPOINT]);
     fclose(file);
   }
-  
+#endif /* _CMOC_VERSION_ */
+
   sprintf(controller, "N:TCP://%s:7357", &controller[MIDPOINT]);
 
   printf("Opening controller\n");
