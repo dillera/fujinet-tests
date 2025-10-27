@@ -82,13 +82,16 @@ int main()
 
   sprintf(controller, "N:TCP://%s:7357", &controller[MIDPOINT]);
 
-  printf("Opening controller\n");
+  printf("Opening controller %s\n", controller);
   err = network_open(controller, OPEN_MODE_RW, 0);
   printf("Connection: %d\n", err);
   if (err != FN_ERR_OK) {
     printf("Unable to open connection to test controller: %d\n", err);
     exit(1);
   }
+
+  // Write the AdapterConfigExtended
+  wlen = network_write(controller, &ace, sizeof(ace));
 
   for (;;) {
     printf("Awaiting test\n");
@@ -185,10 +188,21 @@ int main()
     printf("********************\n");
     printf("%d tests failed\n", fail_count);
     printf("********************\n");
+
+#ifdef __MSX__
+  while (1)
+    ;
+#endif /* __MSX__ */
+
     exit(1);
   }
 
   printf("All tests passed!\n");
+
+#ifdef __MSX__
+  while (1)
+    ;
+#endif /* __MSX__ */
 
   exit(0);
   return 0;

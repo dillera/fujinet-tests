@@ -1,19 +1,35 @@
 CC_DEFAULT ?= zcc
 AS_DEFAULT ?= z80asm
 LD_DEFAULT ?= $(CC_DEFAULT)
+AR_DEFAULT ?= $(AS_DEFAULT)
 
 include $(MWD)/tc-common.mk
 
-CFLAGS += +coleco -subtype=adam
-AFLAGS +=
-LDFLAGS += +coleco -subtype=adam
+CFLAGS +=
+ASFLAGS +=
+LDFLAGS +=
 
-ifdef FUJINET_LIB_INCLUDE
-  CFLAGS += -I$(FUJINET_LIB_INCLUDE)
-endif
-ifdef FUJINET_LIB_DIR
-  LIBS += -L$(FUJINET_LIB_DIR) -l$(FUJINET_LIB_LDLIB)
-endif
+CFLAGS += -DGIT_VERSION='\"$(GIT_VERSION)\"'
+
+define include-dir-flag
+  -I$1
+endef
+
+define asm-include-dir-flag
+  -I$1
+endef
+
+define library-dir-flag
+  -L$1
+endef
+
+define library-flag
+  -l$1
+endef
+
+define link-lib
+  $(AR) -x$1 $2
+endef
 
 define link-bin
   $(LD) $(LDFLAGS) $2 $(LIBS) -o $1
@@ -24,5 +40,5 @@ define compile
 endef
 
 define assemble
-  $(AS) -c $(AFLAGS) -o $1 $2
+  $(AS) $(ASFLAGS) -o=$1 $2
 endef

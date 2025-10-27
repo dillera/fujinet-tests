@@ -2,6 +2,9 @@
 #define FILECMD_H
 
 #include "command.h"
+#ifdef __MSX__
+#include <stdio.h> // MSX changes bool typedef in stdio.h so need to include it
+#endif /* __MSX__ */
 #include <fujinet-fuji.h>
 
 #define OPEN_READ    0x40

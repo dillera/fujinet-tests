@@ -127,6 +127,10 @@ def main():
     with conn:
       print(f"Connected by {addr}")
 
+      ace = conn.recv(240)
+      print("Adapter config:");
+      print(ace)
+
       # FIXME - get FujiNet firmware version and type of machine running tests
 
       for test_group in test_series:

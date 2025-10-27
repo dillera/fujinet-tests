@@ -1,5 +1,5 @@
 PRODUCT = rmttest
-PLATFORMS = coco apple2 atari c64
+PLATFORMS = coco apple2 atari c64 msxrom
 
 # You can run 'make <platform>' to build for a specific platform,
 # or 'make <platform>/<target>' for a platform-specific target.
@@ -24,7 +24,9 @@ FUJINET_LIB = https://github.com/FozzTexx/fujinet-lib-experimental.git
 # Format: platform+=combo1,combo2
 PLATFORM_COMBOS = \
   c64+=commodore \
-  atarixe+=atari
+  atarixe+=atari \
+  msxrom+=msx \
+  msxdos+=msx
 
 include makefiles/toplevel-rules.mk
 

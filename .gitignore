@@ -64,3 +64,5 @@ dkms.conf
 __pycache__
 cmdtest/cmdtest.*
 remotecmd/rmttest.*
+_cache/
+r2r/

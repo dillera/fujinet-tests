@@ -8,10 +8,12 @@ GURU_ERROR = 'Guru Meditation Error'
 class SerialMonitor:
   def __init__(self, port, speed, trigger=GURU_ERROR):
     self.triggerFound = False
+    self.wakeupRecv, self.wakeupSend = socket.socketpair()
+    if port == "-":
+      return
     self.port = serial.Serial(port, speed, timeout=0.5)
     self.trigger = trigger
     self.buffer = []
-    self.wakeupRecv, self.wakeupSend = socket.socketpair()
     return
 
   def monitor(self):
@@ -36,6 +38,8 @@ class SerialMonitor:
     return
 
   def start(self):
+    if not hasattr(self, 'port'):
+      return
     self.thread = threading.Thread(target=self.monitor, daemon=True)
     self.thread.start()
     return

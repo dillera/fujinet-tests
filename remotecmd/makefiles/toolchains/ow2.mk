@@ -3,16 +3,31 @@ AS_DEFAULT ?= wasm
 LD_DEFAULT ?= wlink OPTION quiet
 
 include $(MWD)/tc-common.mk
-CFLAGS += -0 -bt=dos -ms -s -osh -zu
-AFLAGS +=
-LDFLAGS += SYSTEM dos OPTION MAP LIBPATH $(FUJINET_LIB_DIR)
 
-ifdef FUJINET_LIB_INCLUDE
-  CFLAGS += -I$(FUJINET_LIB_INCLUDE)
-endif
-ifdef FUJINET_LIB_DIR
-  LIBS += $(FUJINET_LIB_LDLIB)
-endif
+CFLAGS += -0 -bt=dos -ms -s -osh -zu -fr=$(basename $@).err
+ASFLAGS +=
+LDFLAGS += SYSTEM dos LIBPATH $(FUJINET_LIB_DIR)
+
+CFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+
+define include-dir-flag
+  -I$1
+endef
+
+define asm-include-dir-flag
+  -I$1
+endef
+
+define library-dir-flag
+endef
+
+define library-flag
+  $1
+endef
+
+define link-lib
+  $(LIB) -n $1 $2
+endef
 
 define link-bin
   $(LD) $(LDFLAGS) \
@@ -27,5 +42,5 @@ define compile
 endef
 
 define assemble
-  $(AS) -c $(AFLAGS) -o $1 $2 2>&1
+  $(AS) -c $(ASFLAGS) -o $1 $2 2>&1
 endef
