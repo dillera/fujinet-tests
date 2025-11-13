@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import sys
+import os, sys
 import requests
 import time
 import socket
@@ -9,6 +9,7 @@ from serial_monitor import SerialMonitor
 from fuji_test import *
 from file_test import FileTest
 from disk_test import MountTest
+from lwm import LWM
 
 SERVER_PORT = 7357
 MOUNT_READ = 0
@@ -16,10 +17,11 @@ MOUNT_RDWR = 2
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  parser.add_argument("serial", help="serial port")
+  parser.add_argument("serial", help="serial port or LWM binary")
   parser.add_argument(metavar="tests.json", dest="tests_json", nargs="+",
                       help="json file describing tests to run")
   parser.add_argument("--baud", type=int, default=460800, help="baud rate")
+  parser.add_argument("--fnconfig", help="path to fnconfig.ini for use with LWM")
   return parser
 
 FUJI_TESTS = [
@@ -106,17 +108,20 @@ def loadTests(path):
     test_type = test.pop('test', "Fuji")
     test_class = globals()[test_type + "Test"]
     tests.append(test_class(**test))
-    
+
   return tests
 
 def main():
   args = build_argparser().parse_args()
 
-  guruWatch = SerialMonitor(args.serial, args.baud)
+  if os.path.isfile(args.serial):
+    guruWatch = LWM(args.serial, args.fnconfig)
+  else:
+    guruWatch = SerialMonitor(args.serial, args.baud)
   guruWatch.start()
 
   test_series = [loadTests(path) for path in args.tests_json]
-  
+
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(("0.0.0.0", SERVER_PORT))
@@ -125,7 +130,7 @@ def main():
 
     conn, addr = server.accept()
     with conn:
-      print(f"Connected by {addr}")
+      print(f"Connection from {addr}")
 
       ace = conn.recv(240)
       print("Adapter config:");

@@ -6,6 +6,8 @@ from fuji_commands import FUJICMD, FujiCommandArgs
 from hexdump import hexdump
 
 FLAG_WARN = 0x10
+MASK_16_OR_32 = 0x40
+MAXK_32 = 0x20
 
 MAX_FILENAME_LEN = 256
 
@@ -60,7 +62,7 @@ class FujiTest:
 
     self.replyLength = kwargs.pop('replyLength', 0)
     self.replyType = kwargs.pop('replyType', None)
-    
+
     # get arg list for self.command and make sure all args are present
     # and of required type
     cmdArgs = FujiCommandArgs.get(self.command, None)
@@ -75,12 +77,13 @@ class FujiTest:
         self.replyLength += self.byteLength(replyType)
         if replyType[0] == 'n':
           self.replyType = RType.NULTermString
-      
+
     self.assignArgs(cmdArgs, kwargs)
     return
 
   def assignArgs(self, cmdArgs, kwargs):
     reqArgs = cmdArgs.get('args', None)
+    self.numArgs = 0
     if not reqArgs:
       reqArgs = []
 
@@ -103,6 +106,7 @@ class FujiTest:
           raise ValueError(f"{argName} value {value}"
                            f" outside of allowed range {argRange.start}..{argRange.stop - 1}")
 
+        self.numArgs += 1
         self.aux.extend(self.intToBytes(value, numBits))
 
       elif argType[0] == 's':
@@ -114,6 +118,7 @@ class FujiTest:
           if not self.isValidInt(len(value), numBits, False):
             raise ValueError(f"size of {argName} is longer than maximum {argMax - 1}")
 
+          self.numArgs += 1
           self.aux.extend(self.intToBytes(len(value), numBits))
 
         self.data = value
@@ -155,7 +160,7 @@ class FujiTest:
       return int(argType[1:])
 
     return None
-    
+
   @staticmethod
   def intToBytes(value, numBits):
     bdata = []
@@ -169,7 +174,17 @@ class FujiTest:
     if not self.aux:
       self.aux = []
     auxlen = len(self.aux)
-    flags = (1 << auxlen) - 1
+    flags = 0
+    print("Num args:", self.numArgs, "Num bytes:", auxlen)
+    if self.numArgs:
+      flags = self.numArgs - 1
+      if auxlen != self.numArgs:
+        flags |= MASK_16_OR_32
+        if self.numArgs == 1 and auxlen == 4:
+          flags |= MASK_32
+      flags += 1
+      print("Flags:", flags)
+
     if self.warnOnly:
       flags |= FLAG_WARN
     aux_data = self.aux
@@ -207,6 +222,7 @@ class FujiTest:
     self.sendall(hdata)
     if self.data:
       data = self.data.encode("utf-8") if isinstance(self.data, str) else self.data
+      hexdump(data)
       self.sendall(data)
 
     self.errcode = ErrCode.ReceiveError

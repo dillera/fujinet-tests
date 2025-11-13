@@ -111,9 +111,11 @@ int main()
     tc_buf.reply_len = fntohs(tc_buf.reply_len);
 
     printf("Received command: 0x%02x:%02x\n"
+           "  FLAGS: 0x%02x\n"
 	   "  AUX: 0x%02x 0x%02x 0x%02x 0x%02x\n"
 	   "  DATA: %d REPLY: %d\n",
 	   tc_buf.device, tc_buf.command,
+           tc_buf.flags,
 	   tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 	   tc_buf.data_len, tc_buf.reply_len);
 
@@ -161,7 +163,7 @@ int main()
 #endif /* _CMOC_VERSION_ */
     }
     else {
-      success = fuji_bus_call(tc_buf.device, 1, tc_buf.command, tc_buf.flags,
+      success = fuji_bus_call(tc_buf.device, tc_buf.command, tc_buf.flags & 0b11101111,
 			      tc_buf.aux1, tc_buf.aux2, tc_buf.aux3, tc_buf.aux4,
 			      data, datalen, reply, tc_buf.reply_len);
     }
