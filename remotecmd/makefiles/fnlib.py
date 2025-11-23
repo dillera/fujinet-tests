@@ -16,6 +16,8 @@ FUJINET_CACHE_DIR = os.path.join(CACHE_DIR, "fujinet-lib")
 VERSION_NUM_RE = r"([0-9]+[.][0-9]+[.][0-9]+)"
 VERSION_NAME_RE = fr"v?{VERSION_NUM_RE}"
 LDLIB_REGEX = r"lib(.*)[.]a$"
+
+# FIXME - this is really toolchains, not platforms
 LDLIB_PLATFORMS = ["coco", "dragon"]
 
 def build_argparser():
@@ -270,7 +272,7 @@ class LibLocator:
 
         return
 
-      error_exit("Unable to download FujiNet library from", release_url)
+      #error_exit("Unable to download FujiNet library from", release_url)
       return
 
   def gitClone(self, url):
@@ -299,7 +301,7 @@ class LibLocator:
     return
 
   def findLibraryDir(self, baseDir):
-    dirsToCheck = ["build", *[f"r2r/{p}" for p in self.possiblePlatforms]]
+    dirsToCheck = ["", "build", *[f"r2r/{p}" for p in self.possiblePlatforms]]
     for pdir in dirsToCheck:
       pdir = os.path.join(baseDir, pdir)
       if os.path.isdir(pdir):
@@ -324,7 +326,7 @@ class LibLocator:
         return
     if self.skipIfMissing:
       exit(0)
-    raise ValueError("Unable to find include directory", self.MV.FUJINET_LIB_DIR)
+    error_exit("Unable to find include directory", self.MV.FUJINET_LIB_DIR)
     return
 
   def printMakeVariables(self):

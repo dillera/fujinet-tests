@@ -2,6 +2,20 @@ define pop
   $(wordlist 1, $(shell echo $$(($(words $(1)) - 1))), $(1))
 endef
 
+define require
+	@command -v $(1) >/dev/null 2>&1 || { \
+		echo >&2 ""; \
+		echo >&2 "*************************************************************************************"; \
+		echo >&2 "** ERROR - Missing required tool: $(1)"; \
+		echo >&2 "** Get it here: $(2)"; \
+		echo >&2 "**"; \
+		echo >&2 "** Alternatively, consider Defoogi for builds: https://github.com/FozzTexx/defoogi"; \
+		echo >&2 "*************************************************************************************"; \
+		echo >&2 ""; \
+		exit 1; \
+	}
+endef
+
 # Automatically figure out PLATFORM from the .mk file that included us
 PLATFORM_MK := $(call pop,$(MAKEFILE_LIST))
 PLATFORM := $(basename $(notdir $(lastword $(PLATFORM_MK))))
@@ -62,10 +76,21 @@ expand_platform_pattern = \
         $(subst %PLATFORM%,$(p),$(d))), \
       $(d)))
 
+# Function to expand directories with ** into all matching subdirectories
+# Usage: $(call recursive_dir_search,directories)
+# Supports: src/**, src/**/inc, **/test, etc.
+define recursive_dir_search
+$(foreach dir,$(1),\
+  $(if $(findstring **,$(dir)),\
+    $(patsubst %/.,%,$(shell find . -type d -path './$(dir)' 2>/dev/null | sed 's|^\./||')),\
+    $(dir)))
+endef
+
 # The fully expanded list of source directories
-SRC_DIRS_EXPANDED := $(call expand_platform_pattern,$(SRC_DIRS))
-INCLUDE_DIRS_EXPANDED := $(call expand_platform_pattern,$(INCLUDE_DIRS))
+SRC_DIRS_EXPANDED := $(call recursive_dir_search,$(call expand_platform_pattern,$(SRC_DIRS)))
+INCLUDE_DIRS_EXPANDED := $(call recursive_dir_search,$(call expand_platform_pattern,$(INCLUDE_DIRS)))
 EXTRA_INCLUDE += $(INCLUDE_DIRS_EXPANDED)
+$(info INCLUDE_DIRS_EXPANDED=$(INCLUDE_DIRS_EXPANDED))
 
 # Find all the CFILES and AFILES
 CFILES := $(foreach dir,$(SRC_DIRS_EXPANDED),$(wildcard $(dir)/*.c))
@@ -75,7 +100,10 @@ PFILES := $(foreach dir,$(SRC_DIRS_EXPANDED),$(wildcard $(dir)/*.pas))
 
 # Need two steps: AFILES may be .s or .asm; `make` swaps one suffix at a time
 NORM_AFILES := $(AFILES:.asm=.s)
-OBJS := $(addprefix $(OBJ_DIR)/, $(notdir $(CFILES:.c=.o) $(NORM_AFILES:.s=.o) $(PFILES:.pas=.o)))
+#OBJS := $(addprefix $(OBJ_DIR)/, $(notdir $(CFILES:.c=.o) $(NORM_AFILES:.s=.o) $(PFILES:.pas=.o)))
+OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(CFILES)) \
+        $(patsubst %.s,$(OBJ_DIR)/%.o,$(NORM_AFILES)) \
+        $(patsubst %.pas,$(OBJ_DIR)/%.o,$(PFILES))
 
 $(BUILD_EXEC):: $(OBJS) $(EXECUTABLE_EXTRA_DEPS_$(PLATFORM_UC)) | $(R2R_PD)
 	$(call link-bin,$@,$(OBJS))
@@ -91,12 +119,16 @@ $(AUTO_DIRS):
 	$(MKDIR_P) $@
 
 $(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
+	@$(MKDIR_P) $(dir $@)
 	$(call compile,$@,$<)
 $(OBJ_DIR)/%.o: %.s | $(OBJ_DIR)
+	@$(MKDIR_P) $(dir $@)
 	$(call assemble,$@,$<)
 $(OBJ_DIR)/%.o: %.asm | $(OBJ_DIR)
+	@$(MKDIR_P) $(dir $@)
 	$(call assemble,$@,$<)
 $(OBJ_DIR)/%.o: %.pas | $(OBJ_DIR)
+	@$(MKDIR_P) $(dir $@)
 	$(call compile-pas,$@,$<)
 
 vpath %.c $(SRC_DIRS_EXPANDED)
@@ -144,7 +176,8 @@ $(PLATFORM)/library-post::
 	@:
 
 # include autodeps
--include $(wildcard $(OBJ_DIR)/*.d)
+DEPS := $(OBJS:.o=.d)
+-include $(DEPS)
 
 FUJINET_LIB ?= __UNDEFINED__
 ifeq ($(FUJINET_LIB),__UNDEFINED__)
