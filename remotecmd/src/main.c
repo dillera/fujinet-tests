@@ -24,6 +24,43 @@ char controller[256];
 
 #define MIDPOINT (sizeof(controller) / 2)
 
+void read_string(char *buffer, int buflen)
+{
+#ifndef _CMOC_VERSION_
+  fgets(buffer, buflen, stdin);
+#else
+  int key, idx;
+
+
+  for (idx = 0; idx < buflen - 1; idx++) {
+    while (true) {
+      key = inkey();
+      if (key)
+        break;
+    }
+
+    if (key == '\r' || key == '\n')
+      break;
+
+    if (key == '\b') {
+      idx--;
+      if (idx) {
+        printf("\b \b");
+        idx--;
+      }
+      continue;
+    }
+
+    putchar(key);
+
+    buffer[idx] = (char) key;
+  }
+  buffer[idx] = 0;
+  printf("\n");
+#endif /* _CMOC_VERSION_ */
+  return;
+}
+
 int main()
 {
   uint8_t *data, *reply;
@@ -48,8 +85,8 @@ int main()
   if (fail_count)
     exit(1);
 
-#ifndef _CMOC_VERSION_
   buffer[0] = 0;
+#ifndef _CMOC_VERSION_
   file = fopen(LAST_CONTROLLER, "r");
   if (file) {
     fgets((char *) buffer, sizeof(buffer), file);
@@ -59,13 +96,15 @@ int main()
     buffer[rlen] = 0;
     fclose(file);
   }
+#endif /* _CMOC_VERSION_ */
 
   printf("Hostname/IP address of test controller? ");
   if (buffer[0])
     printf("[%s] ", buffer);
 
   // Why allocate a second buffer when I can use the back half of the buffer I have?
-  fgets(&controller[MIDPOINT], sizeof(controller) - MIDPOINT, stdin);
+  read_string(&controller[MIDPOINT], sizeof(controller) - MIDPOINT);
+
   rlen = strlen(&controller[MIDPOINT]);
   while (controller[MIDPOINT+rlen-1] == '\n')
     rlen--;
@@ -73,6 +112,7 @@ int main()
   if (!controller[MIDPOINT])
     strcpy(&controller[MIDPOINT], (char *) buffer);
 
+#ifndef _CMOC_VERSION_
   file = fopen(LAST_CONTROLLER, "w");
   if (file) {
     fprintf(file, "%s\n", &controller[MIDPOINT]);
