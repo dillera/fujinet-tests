@@ -207,7 +207,10 @@ class FujiTest:
     return None
 
   def sendall(self, data):
-    self._conn.sendall(data)
+    try:
+      self._conn.sendall(data)
+    except BrokenPipeError:
+      pass
     return
 
   def runTest(self, conn, serial):

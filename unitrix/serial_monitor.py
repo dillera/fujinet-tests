@@ -22,7 +22,7 @@ class SerialMonitor:
         line = self.port.readline().decode(errors='ignore')
         if line:
           self.buffer.append(line)
-          print(f"CONSOLE: {line}", end="", flush=True)
+          #print(f"CONSOLE: {line}", end="", flush=True)
         if self.trigger in line:
           print(f"Detected: {self.trigger}", file=sys.stderr)
           # FIXME - collect Backtrace

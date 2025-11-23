@@ -16,6 +16,9 @@ class LWM:
     self.serial = os.ttyname(self.child_pty)
     #print(f"Test should open this device as serial port: {self.serial}", file=sys.stderr)
 
+    lwmPath = os.path.abspath(lwmPath)
+    lwmDir = os.path.dirname(lwmPath)
+    os.chdir(lwmDir)
     self.cmd = ["gdb", "--fullname", "-ex", "run", "--args", lwmPath]
     if configPath:
       self.cmd.extend(["-c", configPath])
@@ -52,7 +55,10 @@ class LWM:
       while True:
         rlist, _, _ = select.select([sys.stdin, self.e_parent_pty], [], [])
         if self.e_parent_pty in rlist:
-          data = os.read(self.e_parent_pty, 1024)
+          try:
+            data = os.read(self.e_parent_pty, 1024)
+          except OSError:
+            break
           if not data:
             break
           # Mirror to wrapper's stdout
@@ -74,4 +80,7 @@ class LWM:
       proc.wait()
       termios.tcsetattr(fd, termios.TCSADRAIN, old_settings) # Restore original settings
 
+    return
+
+  def clearBuffer(self):
     return
