@@ -1,0 +1,32 @@
+[
+  {
+    "command": "open_appkey",
+    "creator": 4,
+    "app": 2,
+    "key": 3,
+    "mode": 1,
+    "reserved": 0
+  },
+  {
+    "command": "write_appkey",
+    "data": "TESTING"
+  },
+  {
+    "command": "close_appkey"
+  },
+  {
+    "command": "open_appkey",
+    "creator": 4,
+    "app": 2,
+    "key": 3,
+    "mode": 0,
+    "reserved": 0
+  },
+  {
+    "command": "read_appkey",
+    "expected": "TESTING"
+  },
+  {
+    "command": "close_appkey"
+  }
+]
