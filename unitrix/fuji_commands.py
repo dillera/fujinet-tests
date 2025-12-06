@@ -126,8 +126,8 @@ FujiCommandArgs = {
   FUJICMD.GET_HOST_PREFIX: {'args': ["host_slot:u8", ], 'reply': ["prefix:f256", ]},
   FUJICMD.SET_SIO_EXTERNAL_CLOCK: {},
   FUJICMD.WRITE_APPKEY: {'args': ["data:s16"]},
-  FUJICMD.READ_APPKEY: {'reply': ["data:s8", ]},
-  FUJICMD.OPEN_APPKEY: {'args': ["creator:u16", "app:u8", "key:u8", "mode:i8", "reserved:u8"]},
+  FUJICMD.READ_APPKEY: {'reply': ["data:f66", ]}, # FIXME - data length varies by platform :-(
+  FUJICMD.OPEN_APPKEY: {'args': ["{creator:u16,app:u8,key:u8,mode:i8,reserved:u8}"]},
   FUJICMD.CLOSE_APPKEY: {},
   FUJICMD.GET_DEVICE_FULLPATH: {'args': ["device_slot:u8", ], 'reply': ["path:f256", ]},
   FUJICMD.CONFIG_BOOT: {'args': ["enable:u8", ]},
