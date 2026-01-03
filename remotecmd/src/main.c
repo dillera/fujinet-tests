@@ -213,7 +213,7 @@ int main()
       fail_count++;
     }
 
-    printf("Result: %d %d 0x%02x\n", success, did_fail, tc_buf.flags);
+    printf("Success: %d  Fail: %d  Flags: 0x%02x\n", success, did_fail, tc_buf.flags);
     // Send results back to controller
     wlen = network_write(controller, &did_fail, 1);
     if (did_fail)
