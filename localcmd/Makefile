@@ -46,4 +46,4 @@ endef
 
 STANDARD_TESTS=tests.jsn
 coco/disk-post::
-	$(call coco-copy,-t -0,$(STANDARD_TESTS),$(DISK))
+	$(call coco-copy,-a -3,$(STANDARD_TESTS),$(DISK))

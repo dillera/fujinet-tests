@@ -20,9 +20,7 @@ void write_file_data(byte *src, size_t total_len)
         if (chunk_len > CHUNK_SIZE)
             chunk_len = CHUNK_SIZE;
 
-        memset(buffer, 0, CHUNK_SIZE);
-        memcpy(buffer, &src[offset], chunk_len);
-        err = network_write(SOCKET, buffer, chunk_len);
+        err = network_write(SOCKET, &src[offset], chunk_len);
         if (err != FN_ERR_OK) {
             printf("NETWORK WRITE FAIL: %u\n", err);
             exit(1);
@@ -65,7 +63,7 @@ void get_json_data(void)
         printf("command: %s\n", command);
 
         count++;
-        waitkey(0);
+        waitkey(1);
     }
 
     printf("\n%d JSON objects read.\n", count);
