@@ -5,8 +5,8 @@
 
 #define CHUNK_SIZE 256
 #define PORT "6573"
-#define SOCKET "N:TCP://:" PORT
-#define CLIENT_SOCKET "N:TCP://localhost:" PORT
+#define SOCKET "N1:TCP://:" PORT
+#define CLIENT_SOCKET "N2:TCP://localhost:" PORT
 
 
 void write_file_data(byte *src, size_t total_len)
@@ -23,7 +23,7 @@ void write_file_data(byte *src, size_t total_len)
         memset(buffer, 0, CHUNK_SIZE);
         memcpy(buffer, &src[offset], chunk_len);
         err = network_write(SOCKET, buffer, chunk_len);
-        if (err) {
+        if (err != FN_ERR_OK) {
             printf("NETWORK WRITE FAIL: %u\n", err);
             exit(1);
         }   
@@ -93,7 +93,7 @@ int main(void)
     //   4 = read error when reading a file sector.
     memset(file_buffer, 0, sizeof(file_buffer));
 
-    retval = readDECBFileWithDECB(file_buffer, 0, "TESTS   TXT", work_buffer, &bytes_read);
+    retval = readDECBFileWithDECB(file_buffer, 0, "TESTS   JSN", work_buffer, &bytes_read);
 
     if (retval != 0)
     {
@@ -167,11 +167,12 @@ int main(void)
     printf("Connected.\n");
     printf("Sending file data...\n");
     write_file_data(file_buffer, bytes_read);
+    network_close(SOCKET);
     printf("Parsing json from file data...\n");
     network_json_parse(CLIENT_SOCKET);
+    printf("Getting json data\n");
     get_json_data();
     network_close(CLIENT_SOCKET);
-    network_close(SOCKET);
 
     return 0;
 }
