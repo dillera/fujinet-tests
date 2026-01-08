@@ -11,7 +11,6 @@
 
 void write_file_data(byte *src, size_t total_len)
 {
-    uint8_t buffer[CHUNK_SIZE];
     size_t offset = 0;
     byte err;
 
