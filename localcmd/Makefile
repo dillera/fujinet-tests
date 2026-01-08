@@ -44,6 +44,6 @@ define coco-copy
     decb copy $1 $2 $3,$${DEST}
 endef
 
-STANDARD_TESTS=tests.jsn
 coco/disk-post::
-	$(call coco-copy,-a -3,$(STANDARD_TESTS),$(DISK))
+	$(call coco-copy,-a -3,commands.jsn,$(DISK))
+	$(call coco-copy,-a -3,tests.jsn,$(DISK))

@@ -1,7 +1,7 @@
 #include "json.h"
 #include <fujinet-network.h>
 
-// FIXME - use decbfile library to read JSON in small chunks
+// FIXME - use decbfile library to read JSON in small chunks?
 // https://gvlsywt.cluster051.hosting.ovh.net/dev/decbfile-0.1.10.tar.gz
 static byte decb_buffer[256];
 static byte json_contents[8192];

@@ -1,4 +1,5 @@
 #include "json.h"
+#include "commands.h"
 
 void get_json_data(void)
 {
@@ -30,6 +31,8 @@ void get_json_data(void)
 int main(void)
 {
     cls(1);
+
+    load_commands("COMMANDSJSN");
 
     if (json_open("TESTS   JSN") != FN_ERR_OK) {
       printf("Failed to open JSON file\n");
