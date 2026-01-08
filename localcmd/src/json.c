@@ -1,44 +1,29 @@
 #include "json.h"
 #include <fujinet-network.h>
+#include <disk.h>
 
-// FIXME - use decbfile library to read JSON in small chunks?
-// https://gvlsywt.cluster051.hosting.ovh.net/dev/decbfile-0.1.10.tar.gz
-static byte decb_buffer[256];
-static byte json_contents[8192];
+static byte json_buffer[256];
 
 #define PORT "7501"
 #define WRITE_SOCKET "N1:TCP://:" PORT
 #define READ_SOCKET "N2:TCP://localhost:" PORT
+
+byte fat_buffer[MAX_NUM_GRANULES];
 
 uint8_t json_open(const char *path)
 {
   size_t length;
   uint8_t err, status;
   uint16_t avail;
+  struct FileDesc fd;
 
 
-  err = readDECBFileWithDECB(json_contents, 0, path, decb_buffer, &length);
-  if (err != 0) {
-    // Error reading file
-    switch (err) {
-    case 1:
-      printf("Error: Read error reading directory sectors.\n");
-      break;
-    case 2:
-      printf("Error: File not found.\n");
-      break;
-    case 3:
-      printf("Error: Read error reading the FAT.\n");
-      break;
-    case 4:
-      printf("Error: Read error reading a file sector.\n");
-    default:
-      printf("Error: Unknown error code %d.\n", err);
-      break;
-    }
+  initdisk(fat_buffer);
+  if (!openfile(&fd, path)) {
+    printf("Failed to open %s\n", path);
+    exit(1);
     return FN_ERR_IO_ERROR;
   }
-  printf("Read %u bytes from %s\n", length, path);
 
   printf("Opening write socket (%s)...\n", WRITE_SOCKET);
   err = network_open(WRITE_SOCKET, OPEN_MODE_RW, 0);
@@ -63,7 +48,15 @@ uint8_t json_open(const char *path)
   if (err != FN_ERR_OK)
     return err;
 
-  err = network_write(WRITE_SOCKET, json_contents, length);
+  for (;;) {
+    length = read(&fd, json_buffer, 256);
+    if (!length)
+      break;
+    err = network_write(WRITE_SOCKET, json_buffer, length);
+    if (err != FN_ERR_OK)
+      break;
+  }
+
   network_close(WRITE_SOCKET);
   network_json_parse(READ_SOCKET);
 

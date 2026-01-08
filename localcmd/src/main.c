@@ -32,9 +32,9 @@ int main(void)
 {
     cls(1);
 
-    load_commands("COMMANDSJSN");
+    load_commands("COMMANDS.JSN");
 
-    if (json_open("TESTS   JSN") != FN_ERR_OK) {
+    if (json_open("TESTS.JSN") != FN_ERR_OK) {
       printf("Failed to open JSON file\n");
       return 1;
     }
