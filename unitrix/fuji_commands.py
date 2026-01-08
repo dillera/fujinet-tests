@@ -107,7 +107,7 @@ FujiCommandArgs = {
   FUJICMD.OPEN_DIRECTORY: {'args': ["host_slot:u8", "path:s8"]},
   FUJICMD.READ_DIR_ENTRY: {'args': ["maxlen:u8", "addtl:u8"], 'reply': ["entry:s7", ]},
   FUJICMD.CLOSE_DIRECTORY: {},
-  FUJICMD.READ_HOST_SLOTS: {'reply': ["datas:f256", ]},
+  FUJICMD.READ_HOST_SLOTS: {'reply': ["data:f256", ]},
   FUJICMD.WRITE_HOST_SLOTS: {'args': ["config:f256", ]},
   FUJICMD.READ_DEVICE_SLOTS: {'reply': ["data:f304", ]},
   FUJICMD.WRITE_DEVICE_SLOTS: {'args': ["config:f304", ]},
