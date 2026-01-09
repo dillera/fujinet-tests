@@ -2,29 +2,32 @@
 #include "json.h"
 
 #define malloc(len) sbrk(len)
+#define strcasecmp(x, y) stricmp(x, y)
 
-typedef struct {
-  char *name;
-  uint8_t type;
-  uint16_t size;
-} FujiArg;
-
-typedef struct {
-  uint8_t command;
-  char *name;
-  uint8_t argCount;
-  FujiArg *args;
-  FujiArg reply;
-} FujiCommand;
-
+uint16_t num_commands = 0;
 FujiCommand *fuji_commands = 0xAAAA;
 
 void parse_command_arg(FujiArg *arg, const char *buffer)
 {
-  // FIXME - split on ':'
-  // FIXME - fill in type and size fields
-  arg->name = (char *) malloc(strlen(buffer) + 1);
-  strcpy(arg->name, buffer);
+  const char *p;
+  uint16_t len;
+
+
+  p = strchr(buffer, ':');
+  if (!p) {
+    printf("Invalid format string %s\n", buffer);
+    exit(1);
+  }
+
+  len = p - buffer;
+  arg->name = (char *) malloc(len + 1);
+  strncpy(arg->name, buffer, len);
+  arg->name[len] = 0;
+  p++;
+  arg->type = *p;
+  p++;
+  arg->size = atoi(p);
+
   return;
 }
 
@@ -50,6 +53,7 @@ uint8_t load_commands(const char *path)
   }
 
   printf("Total commands: %d\n", count);
+  num_commands = count;
 
   idx = sizeof(FujiCommand) * count;
   printf("Allocating %d bytes\n", idx);
@@ -103,4 +107,17 @@ uint8_t load_commands(const char *path)
   json_close();
 
   return FN_ERR_OK;
+}
+
+FujiCommand *find_command(const char *name)
+{
+  uint16_t idx;
+
+
+  for (idx = 0; idx < num_commands; idx++) {
+    if (!strcasecmp(name, fuji_commands[idx].name))
+      return &fuji_commands[idx];
+  }
+
+  return NULL;
 }

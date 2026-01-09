@@ -1,0 +1,19 @@
+#ifndef TESTING_H
+#define TESTING_H
+
+#include <fujinet-fuji.h> // for uint8_t
+
+#define FLAG_WARN   0x10
+#define FLAG_EXPERR 0x20
+
+typedef struct {
+  uint8_t device;
+  uint8_t command;
+  uint8_t flags;
+  uint8_t aux1, aux2, aux3, aux4;
+  uint16_t data_len, reply_len;
+} TestCommand;
+
+extern bool run_test(TestCommand *test, void *data, void *expected);
+
+#endif /* TESTING_H */

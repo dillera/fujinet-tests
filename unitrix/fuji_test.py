@@ -6,8 +6,8 @@ from fuji_commands import FUJICMD, FujiCommandArgs
 from hexdump import hexdump
 
 FLAG_WARN        = 0x10
-MASK_EXCEEDS_U8  = 0x04
-MAXK_EXCEEDS_U16 = 0x02
+FLAG_EXCEEDS_U8  = 0x04
+FLAG_EXCEEDS_U16 = 0x02
 
 MAX_FILENAME_LEN = 256
 
@@ -288,9 +288,9 @@ class FujiTest:
     flags = self.numArgs
     print("Num args:", self.numArgs, "Num bytes:", auxlen)
     if auxlen != self.numArgs:
-      flags += MASK_EXCEEDS_U8
+      flags += FLAG_EXCEEDS_U8
       if self.numArgs == 1 and auxlen == 4:
-        flags += MASK_EXCEEDS_U16
+        flags += FLAG_EXCEEDS_U16
       print("Flags:", flags)
 
     if self.warnOnly:
