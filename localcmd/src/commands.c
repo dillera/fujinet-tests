@@ -1,5 +1,6 @@
 #include "commands.h"
 #include "json.h"
+#include "platform.h"
 
 #define malloc(len) sbrk(len)
 #define strcasecmp(x, y) stricmp(x, y)
@@ -80,10 +81,16 @@ uint8_t load_commands(const char *path)
 
     fuji_commands[idx].reply.name = NULL;
 
-    sprintf(query, "/%d/reply/0", idx);
+    sprintf(query, "/%d/reply-%s/0", idx, platform_name());
     length = json_query(query, buffer);
     if (length)
       parse_command_arg(&fuji_commands[idx].reply, buffer);
+    else {
+      sprintf(query, "/%d/reply/0", idx);
+      length = json_query(query, buffer);
+      if (length)
+        parse_command_arg(&fuji_commands[idx].reply, buffer);
+    }
 
     for (jdx = 0; ; jdx++) {
       sprintf(query, "/%d/args/%d", idx, jdx);
