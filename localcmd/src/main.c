@@ -22,10 +22,10 @@ void get_json_data(void)
         printf("command: %s\n", command);
 
         count++;
-        waitkey(1);
+        //waitkey(1);
     }
 
-    printf("\n%d JSON objects read.\n", count);
+    printf("\n%d tests read.\n", count);
 }
 
 int main(void)

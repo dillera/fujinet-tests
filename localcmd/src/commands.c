@@ -19,10 +19,19 @@ typedef struct {
 
 FujiCommand *fuji_commands = 0xAAAA;
 
+void parse_command_arg(FujiArg *arg, const char *buffer)
+{
+  // FIXME - split on ':'
+  // FIXME - fill in type and size fields
+  arg->name = (char *) malloc(strlen(buffer) + 1);
+  strcpy(arg->name, buffer);
+  return;
+}
+
 uint8_t load_commands(const char *path)
 {
   uint8_t err, cnum;
-  uint16_t count, idx;
+  uint16_t count, idx, jdx;
   size_t length;
   char query[32];
   char buffer[64];
@@ -32,6 +41,7 @@ uint8_t load_commands(const char *path)
   if (err != FN_ERR_OK)
     return err;
 
+  printf("Counting Fuji commands...\n");
   for (count = 0; ; count++) {
     sprintf(query, "/%d/command", count);
     length = json_query(query, buffer);
@@ -64,7 +74,30 @@ uint8_t load_commands(const char *path)
 
     printf("IDX %d == 0x%02x %s\n", idx, fuji_commands[idx].command, fuji_commands[idx].name);
 
-    // FIXME - get args & reply
+    fuji_commands[idx].reply.name = NULL;
+
+    sprintf(query, "/%d/reply/0", idx);
+    length = json_query(query, buffer);
+    if (length)
+      parse_command_arg(&fuji_commands[idx].reply, buffer);
+
+    for (jdx = 0; ; jdx++) {
+      sprintf(query, "/%d/args/%d", idx, jdx);
+      length = json_query(query, buffer);
+      if (!length)
+        break;
+    }
+
+    fuji_commands[idx].argCount = (uint8_t) jdx;
+    if (fuji_commands[idx].argCount) {
+      fuji_commands[idx].args = (FujiArg *) sbrk(sizeof(FujiArg)
+                                                 * fuji_commands[idx].argCount);
+      for (jdx = 0; jdx < fuji_commands[idx].argCount; jdx++) {
+        sprintf(query, "/%d/args/%d", idx, jdx);
+        length = json_query(query, buffer);
+        parse_command_arg(&fuji_commands[idx].args[jdx], buffer);
+      }
+    }
   }
 
   json_close();
