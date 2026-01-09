@@ -2,21 +2,49 @@
 #include "commands.h"
 #include "testing.h"
 
+#define strcasecmp(x, y) stricmp(x, y)
+
 #define FLAG_EXCEEDS_U8  0x04
 #define FLAG_EXCEEDS_U16 0x02
 
+void add_aux_val(TestCommand *test, uint16_t val, uint16_t size, int *auxpos)
+{
+  uint8_t *ptr;
+  int offset, remain;
+
+
+  ptr = &test->aux1;
+  for (remain = size, offset = *auxpos; remain; remain -= 8, offset++) {
+    // FXIME - deal with endianness
+    *(ptr + offset) = (uint8_t) (val & 0xFF);
+    val >>= 8;
+  }
+  *auxpos = offset;
+
+  test->flags++;
+  if (test->flags < 4 && size > 8) {
+    test->flags += FLAG_EXCEEDS_U8;
+    if (size > 16)
+      test->flags += FLAG_EXCEEDS_U16;
+  }
+
+  return;
+}
+
 void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
-                       int *auxpos, void **dataptr)
+                       int *auxpos, const void **dataptr)
 {
   int val, size, offset;
-  uint8_t *ptr;
 
 
   switch (arg->type) {
-  case 's':
   case 'b':
-    printf("Unhandled type %c\n", arg->type);
-    exit(1);
+    val = 0;
+    if (!strcasecmp(input, "TRUE"))
+      val = 1;
+    else if (atoi(input))
+      val = 1;
+    add_aux_val(test, val, 8, auxpos);
     break;
 
   case 'f':
@@ -24,21 +52,15 @@ void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
     *dataptr = input;
     break;
 
+  case 's':
+    test->data_len = strlen(input);
+    *dataptr = input;
+    add_aux_val(test, test->data_len, arg->size, auxpos);
+    break;
+
   default: // integer types
-    val = atoi(input); // FIXME - handle unsigned greater than 32767
-    ptr = &test->aux1;
-    for (size = arg->size, offset = *auxpos; size; size -= 8, offset++) {
-      // FXIME - deal with endianness
-      *(ptr + offset) = (uint8_t) (val & 0xFF);
-      val >>= 8;
-    }
-    *auxpos = offset;
-    test->flags++;
-    if (test->flags < 4 && arg->size > 8) {
-      test->flags += FLAG_EXCEEDS_U8;
-      if (arg->size > 16)
-        test->flags += FLAG_EXCEEDS_U16;
-    }
+    // FIXME - handle unsigned greater than 32767
+    add_aux_val(test, atoi(input), arg->size, auxpos);
     break;
   }
 
@@ -98,10 +120,17 @@ void get_json_data(void)
             return;
           }
           printf("Arg %s = %s\n", cmd->args[idx].name, command);
-          add_test_argument(&test, &cmd->args[idx], command, &auxpos, &data);
+          add_test_argument(&test, &cmd->args[idx], command, &auxpos, (const void **) &data);
         }
 
-        // FIXME - get reply, expected
+        sprintf(query, "/%d/replyLength", count);
+        bytesread = json_query(query, command);
+        if (bytesread)
+          test.reply_len = atoi(command);
+        else if (cmd->reply.type == 'f')
+          test.reply_len = cmd->reply.size;
+
+        // FIXME - get expected
 
         sprintf(query, "/%d/warnOnly", count);
         bytesread = json_query(query, command);
