@@ -15,5 +15,6 @@ typedef struct {
 } TestCommand;
 
 extern bool run_test(TestCommand *test, void *data, void *expected);
+extern void execute_tests(const char *path);
 
 #endif /* TESTING_H */
