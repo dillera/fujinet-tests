@@ -1,10 +1,14 @@
 #include "testing.h"
 #include "commands.h"
 #include "json.h"
+#include "results.h"
 
 enum {
   FUJI_DEVICEID_FILE            = 0xAA,
 };
+
+#define malloc(len) sbrk(len)
+#define strcasecmp(x, y) stricmp(x, y)
 
 unsigned int fail_count = 0;
 static uint8_t reply[256];
@@ -23,7 +27,6 @@ bool run_test(TestCommand *test, void *data, void *expected)
          test->aux1, test->aux2, test->aux3, test->aux4,
          test->data_len, test->reply_len);
 
-  waitkey(1);
   printf("Executing 0x%02x:%02x\n", test->device, test->command);
 #if 0
   if (test->device >= FUJI_DEVICEID_DISK && test->device <= FUJI_DEVICEID_DISK_LAST) {
@@ -58,11 +61,6 @@ bool run_test(TestCommand *test, void *data, void *expected)
 
   return success;
 }
-
-#define strcasecmp(x, y) stricmp(x, y)
-
-#define FLAG_EXCEEDS_U8  0x04
-#define FLAG_EXCEEDS_U16 0x02
 
 void add_aux_val(TestCommand *test, uint16_t val, uint16_t size, int *auxpos)
 {
@@ -135,6 +133,8 @@ void execute_tests(const char *path)
   TestCommand test;
   int auxpos;
   void *data, *expected;
+  bool success;
+  TestResult *result_ptr;
 
 
   if (json_open("TESTS.JSN") != FN_ERR_OK) {
@@ -202,13 +202,25 @@ void execute_tests(const char *path)
     if (bytesread)
       test.flags |= FLAG_EXPERR;
 
-    if (!run_test(&test, data, expected)) {
+    success = run_test(&test, data, expected);
+
+    // Record result
+    result_ptr = (TestResult *)malloc(sizeof(TestResult));
+    result_ptr->command_name = cmd->name;
+    result_ptr->command = test.command;
+    result_ptr->device = test.device;
+    result_ptr->success = success;
+    result_ptr->flags = test.flags;
+
+    result_list_insert(&result_list, result_ptr);
+
+    if (!(test.flags & FLAG_WARN) && !success)
+    {
       printf("TEST FAILED\n");
       return;
     }
 
     count++;
-    waitkey(1);
   }
 
   json_close();
