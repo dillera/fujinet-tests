@@ -2,8 +2,6 @@
 #include "testing.h"
 #include "results.h"
 
-
-
 int main(void)
 {
     int test_count;
@@ -21,8 +19,6 @@ int main(void)
     cls(1);
 #else
 #endif /* _CMOC_VERSION_ */
-
-cls(1);
 
     load_commands("COMMANDS.JSN");
     printf("Running tests\n");
