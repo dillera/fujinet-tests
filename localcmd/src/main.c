@@ -27,6 +27,7 @@ int main(void)
     clrscr();
 #endif /* _CMOC_VERSION_ */
 
+    printf("Loading commands\n");
     load_commands("COMMANDS.JSN");
     printf("Running tests\n");
     execute_tests("TESTS.JSN");
