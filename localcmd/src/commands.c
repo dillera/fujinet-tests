@@ -17,7 +17,7 @@ void parse_command_arg(FujiArg *arg, const char *buffer)
   p = strchr(buffer, ':');
   if (!p) {
     printf("Invalid format string %s\n", buffer);
-    exit(1);
+    return;
   }
 
   len = p - buffer;

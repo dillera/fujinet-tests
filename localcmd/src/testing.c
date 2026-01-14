@@ -185,7 +185,7 @@ void execute_tests(const char *path)
 
       if (!fujiDeviceTable[dev_idx].num) {
         printf("Unknown device %s\n", command);;
-        exit(1);
+        return;
       }
     }
 

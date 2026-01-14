@@ -71,3 +71,5 @@ endef
 apple2/disk-post:: commands.jsn tests.jsn
 	$(call apple2-copy,-ptx,commands.jsn,$(DISK))
 	$(call apple2-copy,-ptx,tests.jsn,$(DISK))
+
+DISK_EXTRA_DEPS_ATARI = commands.jsn tests.jsn

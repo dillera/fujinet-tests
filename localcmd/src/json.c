@@ -21,7 +21,6 @@ uint8_t json_open(const char *path)
   fd = fopen(path, "r");
   if (!fd) {
     printf("Failed to open %s\n", path);
-    exit(1);
     return FN_ERR_IO_ERROR;
   }
 
@@ -77,7 +76,7 @@ size_t json_query(const char *query, void *buffer)
 
   if (length < 0) {
     printf("ERROR %d\n", length);
-    exit(1);
+    return 0;
   }
   return length;
 }
