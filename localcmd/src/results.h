@@ -1,6 +1,9 @@
 #ifndef RESULTS_H
 #define RESULTS_H
 
+#ifdef __MSX__
+#include <stdio.h> // MSX changes bool typedef in stdio.h so need to include it first
+#endif /* __MSX__ */
 #include <fujinet-fuji.h>
 
 typedef struct {

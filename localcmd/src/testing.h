@@ -1,6 +1,9 @@
 #ifndef TESTING_H
 #define TESTING_H
 
+#ifdef __MSX__
+#include <stdio.h> // MSX changes bool typedef in stdio.h so need to include it first
+#endif /* __MSX__ */
 #include <fujinet-fuji.h> // for uint8_t
 
 #define FLAG_WARN   0x10

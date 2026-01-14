@@ -5,7 +5,7 @@ PLATFORMS += atari
 PLATFORMS += c64
 #PLATFORMS += adam
 #PLATFORMS += msdos
-#PLATFORMS += msx
+PLATFORMS += msx
 
 # You can run 'make <platform>' to build for a specific platform,
 # or 'make <platform>/<target>' for a platform-specific target.
@@ -56,3 +56,6 @@ endef
 coco/disk-post:: commands.jsn tests.jsn
 	$(call coco-copy,-a -3,commands.jsn,$(DISK))
 	$(call coco-copy,-a -3,tests.jsn,$(DISK))
+
+CFLAGS_EXTRA_MSX = -DAMALLOC
+LDFLAGS_EXTRA_MSX = -pragma-define:CRT_HEAP_AMALLOC=3

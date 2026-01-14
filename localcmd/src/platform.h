@@ -11,6 +11,8 @@
 #define platform_name() "atari"
 #elif defined(BUILD_C64)
 #define platform_name() "c64"
+#elif defined(BUILD_MSX)
+#define platform_name() "msx"
 #endif /* BUILD_COCO */
 
 #endif /* PLATFORM_H */
