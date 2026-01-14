@@ -10,8 +10,6 @@
 
 int main(void)
 {
-    int test_count;
-
 #ifdef _CMOC_VERSION_
     initCoCoSupport();
     if (isCoCo3)

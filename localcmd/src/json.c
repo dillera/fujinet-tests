@@ -1,9 +1,7 @@
 #include "json.h"
 #include <fujinet-network.h>
-#ifdef _CMOC_VERSION_
-#include <disk.h>
-#else
 #include <stdio.h>
+#ifndef _CMOC_VERSION_
 #include <string.h>
 #include <conio.h>
 #endif /* _CMOC_VERSION_ */
@@ -14,18 +12,16 @@ static char json_buffer[256];
 #define WRITE_SOCKET "N1:TCP://:" PORT
 #define READ_SOCKET "N2:TCP://localhost:" PORT
 
-byte fat_buffer[MAX_NUM_GRANULES];
-
 uint8_t json_open(const char *path)
 {
   size_t length;
   uint8_t err, status;
   uint16_t avail;
-  struct FileDesc fd;
+  FILE *fd;
 
 
-  initdisk(fat_buffer);
-  if (!openfile(&fd, path)) {
+  fd = fopen(path, "r");
+  if (!fd) {
     printf("Failed to open %s\n", path);
     exit(1);
     return FN_ERR_IO_ERROR;
@@ -55,7 +51,7 @@ uint8_t json_open(const char *path)
     return err;
 
   for (;;) {
-    length = read(&fd, json_buffer, 256);
+    length = fread(json_buffer, 1, 256, fd);
     if (!length)
       break;
     err = network_write(WRITE_SOCKET, json_buffer, length);
@@ -63,6 +59,7 @@ uint8_t json_open(const char *path)
       break;
   }
 
+  fclose(fd);
   network_close(WRITE_SOCKET);
   network_json_parse(READ_SOCKET);
 
