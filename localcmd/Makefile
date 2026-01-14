@@ -1,5 +1,11 @@
 PRODUCT = lcltest
-PLATFORMS = coco apple2 atari c64 adam msdos msxrom
+PLATFORMS += coco
+PLATFORMS += apple2
+PLATFORMS += atari
+PLATFORMS += c64
+#PLATFORMS += adam
+#PLATFORMS += msdos
+#PLATFORMS += msx
 
 # You can run 'make <platform>' to build for a specific platform,
 # or 'make <platform>/<target>' for a platform-specific target.
@@ -11,6 +17,8 @@ PLATFORMS = coco apple2 atari c64 adam msdos msxrom
 # It expands to the chosen PLATFORM plus any of its combos.
 SRC_DIRS = src src/%PLATFORM%
 INCLUDE_DIRS = src/%PLATFORM%
+
+CFLAGS = -DBUILD_$(PLATFORM_UC)
 
 # FUJINET_LIB can be
 # - a version number such as 4.7.6

@@ -7,6 +7,8 @@ typedef struct {
   struct FileDesc fd;
 } stdio_handle;
 
+int errno = 0;
+
 static bool stdio_initialized = false;
 static byte fat_buffer[MAX_NUM_GRANULES];
 static stdio_handle stdio_fd[MAX_STDIO_OPEN_FILES];
@@ -85,4 +87,11 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
   // FIXME - what if size * nmemb > 32767
   length = read(&stdio_fd[idx].fd, (char *) ptr, size * nmemb);
   return length / size;
+}
+
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+  printf("fwrite NOT IMPLEMENTED\n");
+  exit(1);
+  return 0;
 }

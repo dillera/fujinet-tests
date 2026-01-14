@@ -1,10 +1,16 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#ifdef _CMOC_VERSION_
+#if defined(BUILD_COCO)
 #define platform_name() "coco"
 #include <cmoc.h>
 #include <coco.h>
-#endif /* _CMOC_VERSION_ */
+#elif defined(BUILD_APPLE2)
+#define platform_name() "apple2"
+#elif defined(BUILD_ATARI)
+#define platform_name() "atari"
+#elif defined(BUILD_C64)
+#define platform_name() "c64"
+#endif /* BUILD_COCO */
 
 #endif /* PLATFORM_H */

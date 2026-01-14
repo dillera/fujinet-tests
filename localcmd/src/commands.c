@@ -1,18 +1,11 @@
 #include "commands.h"
 #include "json.h"
 #include "platform.h"
-
-#ifndef _CMOC_VERSION_
-#include <stdio.h>
 #include <string.h>
-#include <conio.h>
-#endif /* _CMOC_VERSION_ */
+#include <stdio.h>
+#include <stdlib.h>
 
-#define malloc(len) sbrk(len)
-#define strcasecmp(x, y) stricmp(x, y)
-
-//uint16_t num_commands = 0;
-FujiCommand *fuji_commands = 0xAAAA;
+FujiCommand *fuji_commands; // = 0xAAAA;
 
 void parse_command_arg(FujiArg *arg, const char *buffer)
 {
@@ -53,22 +46,6 @@ uint8_t load_commands(const char *path)
     return err;
 
   printf("Loading Fuji commands...\n");
-#if 0
-  for (count = 0; ; count++) {
-    sprintf(query, "/%d/command", count);
-    length = json_query(query, buffer);
-    if (!length)
-      break;
-  }
-
-  printf("Total commands: %d\n", count);
-  num_commands = count;
-
-  idx = sizeof(FujiCommand) * count;
-  printf("Allocating %d bytes\n", idx);
-  fuji_commands = (FujiCommand *) malloc(idx);
-  printf("FUJI COMMANDS = %04X\n", fuji_commands);
-#endif
 
   cmd = NULL;
   for (idx = 0; ; idx++) {
@@ -120,8 +97,7 @@ uint8_t load_commands(const char *path)
 
     cmd->argCount = (uint8_t) jdx;
     if (cmd->argCount) {
-      cmd->args = (FujiArg *) sbrk(sizeof(FujiArg)
-                                                 * cmd->argCount);
+      cmd->args = (FujiArg *) malloc(sizeof(FujiArg) * cmd->argCount);
       for (jdx = 0; jdx < cmd->argCount; jdx++) {
         sprintf(query, "/%d/args/%d", idx, jdx);
         length = json_query(query, buffer);

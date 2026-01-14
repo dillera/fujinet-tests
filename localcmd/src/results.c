@@ -1,18 +1,16 @@
-
-#include <fujinet-fuji.h>
 #include "results.h"
 #include "testing.h"
 #include "platform.h"
-
-#ifndef _CMOC_VERSION_
+#include <fujinet-fuji.h> // for bool
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <conio.h>
-#endif /* _CMOC_VERSION_ */
-
-#define malloc(len) sbrk(len)
 
 ResultList result_list;
+AdapterConfigExtended config;
+char outbuf[80];
+char resultbuf[5];
 
 void result_list_init(ResultList *list)
 {
@@ -24,7 +22,12 @@ void result_list_init(ResultList *list)
 
 bool result_list_insert(ResultList *list, TestResult *tr)
 {
-    ResultNode *node = (ResultNode *)malloc(sizeof(*node));
+    bool is_warn, is_fail;
+    ResultNode *node;
+    ResultNode *insert_after = NULL;
+
+
+    node = (ResultNode *)malloc(sizeof(*node));
     if (!node)
         return false;
 
@@ -32,8 +35,8 @@ bool result_list_insert(ResultList *list, TestResult *tr)
     node->next = 0;
 
     /* Classify */
-    bool is_warn = (!tr->success) && (tr->flags & FLAG_WARN);
-    bool is_fail = (!tr->success) && !is_warn; /* i.e., failure without warn */
+    is_warn = (!tr->success) && (tr->flags & FLAG_WARN);
+    is_fail = (!tr->success) && !is_warn; /* i.e., failure without warn */
     /* pass is tr->success == true */
 
     if (!list->head)
@@ -73,8 +76,6 @@ bool result_list_insert(ResultList *list, TestResult *tr)
     /* Bucket 2: WARN (success==false AND FLAG_WARN) */
     if (is_warn)
     {
-        ResultNode *insert_after = 0;
-
         if (list->last_warn)
             insert_after = list->last_warn; /* after last WARN */
         else if (list->last_failure)
@@ -129,15 +130,12 @@ void print_test_results()
     int line_count = 0;
     int pass_count = 0;
     int warn_count = 0;
-    AdapterConfigExtended config;
     ResultNode *n;
     TestResult *result;
-    char outbuf[80];
-    char resultbuf[5];
     int screen_width = 40;
     int page_size = 20;
 
-#ifdef _CMOC_VERSION_
+#ifdef BUILD_COCO
     if (isCoCo3)
     {
         page_size = 18;
@@ -148,10 +146,8 @@ void print_test_results()
         page_size = 10;
         screen_width = 32;
     }
-    cls(1);
-#else
+#endif /* BUILD_COCO */
     clrscr();
-#endif /* _CMOC_VERSION_ */
 
     fuji_get_adapter_config_extended(&config);
 

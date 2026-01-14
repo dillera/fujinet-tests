@@ -2,12 +2,11 @@
 #include "commands.h"
 #include "json.h"
 #include "results.h"
-
-#ifndef _CMOC_VERSION_
+#include "diskcmd.h"
+#include "filecmd.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <conio.h>
-#endif /* _CMOC_VERSION_ */
 
 enum {
   FUJI_DEVICEID_FILE            = 0xAA,
@@ -29,11 +28,10 @@ const FujiDeviceID fujiDeviceTable[] = {
 
 #define FLAG_MASK ((uint8_t) ~(FLAG_WARN | FLAG_EXPERR))
 
-#define malloc(len) sbrk(len)
-#define strcasecmp(x, y) stricmp(x, y)
-
 unsigned int fail_count = 0;
 static uint8_t reply[256];
+char command[50];
+char query[256];
 
 bool run_test(TestCommand *test, void *data, void *expected)
 {
@@ -50,29 +48,20 @@ bool run_test(TestCommand *test, void *data, void *expected)
          test->data_len, test->reply_len);
 
   printf("Executing 0x%02x:%02x\n", test->device, test->command);
-#if 0
   if (test->device >= FUJI_DEVICEID_DISK && test->device <= FUJI_DEVICEID_DISK_LAST) {
     // Disks are handled by the opearating system
     success = disk_command(test, data, reply, sizeof(reply));
   }
   else if (test->device == FUJI_DEVICEID_FILE) {
-#ifdef _CMOC_VERSION_
-    // CMOC doesn't provide any file I/O routines for DECB
-    success = 0;
-#else /* ! _CMOC_VERSION_ */
-      // pseudo-commands for test controller to open/read/write files
+    // pseudo-commands for test controller to open/read/write files
     success = file_command(test, data, reply, sizeof(reply));
-#endif /* _CMOC_VERSION_ */
   }
   else {
-#endif // 0
     success = fuji_bus_call(test->device, test->command, test->flags & FLAG_MASK,
                             test->aux1, test->aux2, test->aux3, test->aux4,
                             data, test->data_len,
                             test->reply_len ? reply : (uint8_t *) NULL, test->reply_len);
-#if 0
   }
-#endif // 0
 
   if (test->flags & FLAG_EXPERR)
     success = !success;
@@ -114,7 +103,7 @@ void add_aux_val(TestCommand *test, uint16_t val, uint16_t size, int *auxpos)
 void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
                        int *auxpos, const void **dataptr)
 {
-  int val, size, offset;
+  int val;
 
 
   switch (arg->type) {
@@ -149,10 +138,8 @@ void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
 
 void execute_tests(const char *path)
 {
-  char command[50];
   int16_t bytesread;
   int count = 0;
-  char query[256];
   FujiCommand *cmd;
   uint16_t idx, dev_idx;
   TestCommand test;
