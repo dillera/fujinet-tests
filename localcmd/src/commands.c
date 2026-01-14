@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-FujiCommand *fuji_commands; // = 0xAAAA;
+FujiCommand *fuji_commands = NULL;
 
 void parse_command_arg(FujiArg *arg, const char *buffer)
 {
