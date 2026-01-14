@@ -108,6 +108,9 @@ uint8_t load_commands(const char *path)
 
   json_close();
 
+  if (!idx)
+    return -1;
+
   return FN_ERR_OK;
 }
 

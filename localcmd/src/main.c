@@ -1,12 +1,9 @@
 #include "commands.h"
 #include "testing.h"
 #include "results.h"
-
-#ifndef _CMOC_VERSION_
+#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <conio.h>
-#endif /* _CMOC_VERSION_ */
 
 int main(void)
 {
@@ -25,21 +22,25 @@ int main(void)
     clrscr();
 #endif /* _CMOC_VERSION_ */
 
-    load_commands("COMMANDS.JSN");
+    if (load_commands("COMMANDS.JSN") != FN_ERR_OK) {
+      printf("No commands found\n");
+      exit(1);
+    }
+
     execute_tests("TESTS.JSN");
 #ifdef _CMOC_VERSION_
     if (isCoCo3)
     {
-        printf("\nTests complete. Press a key for results.");  
+        printf("\nTests complete. Press a key for results.");
     }
     else
     {
-        printf("\n<Tests complete.>\n");  
-        printf("Press a key for results."); 
+        printf("\n<Tests complete.>\n");
+        printf("Press a key for results.");
     }
     waitkey(0);
 #else
-    printf("\nTests complete. Press a key for results.");  
+    printf("\nTests complete. Press a key for results.");
     cgetc();
 #endif
     print_test_results();

@@ -59,3 +59,15 @@ coco/disk-post:: commands.jsn tests.jsn
 
 CFLAGS_EXTRA_MSX = -DAMALLOC
 LDFLAGS_EXTRA_MSX = -pragma-define:CRT_HEAP_AMALLOC=3
+
+# $1 == ac flags
+# $2 == source file
+# $3 == disk image
+define apple2-copy
+  DEST="$$(basename $2 | tr '[:lower:]' '[:upper:]')" ; \
+    $(DISK_TOOL) $1 $3 $${DEST} < $2
+endef
+
+apple2/disk-post:: commands.jsn tests.jsn
+	$(call apple2-copy,-ptx,commands.jsn,$(DISK))
+	$(call apple2-copy,-ptx,tests.jsn,$(DISK))
