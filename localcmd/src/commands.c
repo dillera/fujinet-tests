@@ -39,7 +39,7 @@ uint8_t load_commands(const char *path)
 {
   uint8_t err, cnum;
   uint16_t idx, jdx;
-  size_t length;
+  int length;
   FujiCommand *cmd, *next;
 
 
@@ -53,12 +53,16 @@ uint8_t load_commands(const char *path)
   for (idx = 0; ; idx++) {
     sprintf(query, "/%d/command", idx);
     length = json_query(query, buffer);
+    if (length < 0)
+      return -length;
     if (!length)
       break;
 
     cnum = (uint8_t) atoi(buffer);
     sprintf(query, "/%d/name", idx);
     length = json_query(query, buffer);
+    if (length < 0)
+      return -length;
     if (!length)
       break;
 
@@ -81,11 +85,15 @@ uint8_t load_commands(const char *path)
 
     sprintf(query, "/%d/reply-%s/0", idx, platform_name());
     length = json_query(query, buffer);
+    if (length < 0)
+      return -length;
     if (length)
       parse_command_arg(&cmd->reply, buffer);
     else {
       sprintf(query, "/%d/reply/0", idx);
       length = json_query(query, buffer);
+      if (length < 0)
+        return -length;
       if (length)
         parse_command_arg(&cmd->reply, buffer);
     }
@@ -93,6 +101,8 @@ uint8_t load_commands(const char *path)
     for (jdx = 0; ; jdx++) {
       sprintf(query, "/%d/args/%d", idx, jdx);
       length = json_query(query, buffer);
+      if (length < 0)
+        return -length;
       if (!length)
         break;
     }
@@ -103,6 +113,8 @@ uint8_t load_commands(const char *path)
       for (jdx = 0; jdx < cmd->argCount; jdx++) {
         sprintf(query, "/%d/args/%d", idx, jdx);
         length = json_query(query, buffer);
+        if (length < 0)
+          return -length;
         parse_command_arg(&cmd->args[jdx], buffer);
       }
     }

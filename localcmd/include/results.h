@@ -27,6 +27,7 @@ typedef struct {
 } ResultList;
 
 
+extern AdapterConfigExtended fn_config;
 extern ResultList result_list;
 
 #define RESULTLIST_FOR_EACH(node_ptr, list_ptr) \

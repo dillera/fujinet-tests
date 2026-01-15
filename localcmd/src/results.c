@@ -8,7 +8,7 @@
 #include <string.h>
 
 ResultList result_list;
-AdapterConfigExtended config;
+AdapterConfigExtended fn_config;
 char outbuf[80];
 char resultbuf[5];
 
@@ -126,9 +126,7 @@ void print_test_results()
 
     clrscr();
 
-    fuji_get_adapter_config_extended(&config);
-
-    print_test_result_header(config.fn_version);
+    print_test_result_header(fn_config.fn_version);
 
     n = result_list.head;
     while (n != 0)
@@ -174,7 +172,7 @@ void print_test_results()
                 printf("\nPress any key to continue...");
                 cgetc();
                 clrscr();
-                print_test_result_header(config.fn_version);
+                print_test_result_header(fn_config.fn_version);
             }
 
         }

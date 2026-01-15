@@ -71,14 +71,14 @@ void json_close()
   return;
 }
 
-size_t json_query(const char *query, void *buffer)
+int json_query(const char *query, void *buffer)
 {
   int length = network_json_query(READ_SOCKET, query, (char *) buffer);
 
 
   if (length < 0) {
     printf("ERROR %d\n", length);
-    return 0;
+    return length;
   }
   return length;
 }
