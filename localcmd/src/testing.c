@@ -9,7 +9,6 @@
 #include "diskcmd.h"
 #include "filecmd.h"
 
-
 enum {
   FUJI_DEVICEID_FILE            = 0xAA,
 };
@@ -138,21 +137,23 @@ void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
   return;
 }
 
+// Open Watcom can't do far pointers in a function declaration
+static TestCommand exec_test;
+static int exec_auxpos;
+
 void execute_tests(const char *path)
 {
   int16_t bytesread;
   int count = 0;
   FujiCommand *cmd;
   uint16_t idx, dev_idx;
-  TestCommand test;
-  int auxpos;
   void *data, *expected;
   bool success;
   TestResult *result_ptr;
 
   printf("Running tests...\n");
 
-  if (json_open("TESTS.JSN") != FN_ERR_OK) {
+  if (json_open(path) != FN_ERR_OK) {
     printf("Failed to open JSON file\n");
     return;
   }
@@ -174,11 +175,11 @@ void execute_tests(const char *path)
     sprintf(query, "/%d/device", count);
     bytesread = json_query(query, command);
     if (!bytesread)
-      test.device = FUJI_DEVICEID_FUJINET;
+      exec_test.device = FUJI_DEVICEID_FUJINET;
     else {
       for (dev_idx = 0; fujiDeviceTable[dev_idx].num; dev_idx++) {
         if (!stricmp(fujiDeviceTable[dev_idx].name, command)) {
-          test.device = fujiDeviceTable[dev_idx].num;
+          exec_test.device = fujiDeviceTable[dev_idx].num;
           break;
         }
       }
@@ -189,11 +190,11 @@ void execute_tests(const char *path)
       }
     }
 
-    test.command = cmd->command;
-    test.flags = 0;
-    test.aux1 = test.aux2 = test.aux3 = test.aux4 = 0;
-    test.data_len = test.reply_len = 0;
-    auxpos = 0;
+    exec_test.command = cmd->command;
+    exec_test.flags = 0;
+    exec_test.aux1 = exec_test.aux2 = exec_test.aux3 = exec_test.aux4 = 0;
+    exec_test.data_len = exec_test.reply_len = 0;
+    exec_auxpos = 0;
     data = expected = NULL;
 
     for (idx = 0; idx < cmd->argCount; idx++) {
@@ -204,41 +205,42 @@ void execute_tests(const char *path)
         return;
       }
       printf("Arg %s = %s\n", cmd->args[idx].name, command);
-      add_test_argument(&test, &cmd->args[idx], command, &auxpos, (const void **) &data);
+      add_test_argument(&exec_test, &cmd->args[idx], command, &exec_auxpos,
+                        (const void **) &data);
     }
 
     sprintf(query, "/%d/replyLength", count);
     bytesread = json_query(query, command);
     if (bytesread)
-      test.reply_len = atoi(command);
+      exec_test.reply_len = atoi(command);
     else if (cmd->reply.type == 'f')
-      test.reply_len = cmd->reply.size;
+      exec_test.reply_len = cmd->reply.size;
 
     // FIXME - get expected
 
     sprintf(query, "/%d/warnOnly", count);
     bytesread = json_query(query, command);
     if (bytesread)
-      test.flags |= FLAG_WARN;
+      exec_test.flags |= FLAG_WARN;
 
     sprintf(query, "/%d/errorExpected", count);
     bytesread = json_query(query, command);
     if (bytesread)
-      test.flags |= FLAG_EXPERR;
+      exec_test.flags |= FLAG_EXPERR;
 
-    success = run_test(&test, data, expected);
+    success = run_test(&exec_test, data, expected);
 
     // Record result
     result_ptr = (TestResult *)malloc(sizeof(TestResult));
     result_ptr->command_name = cmd->name;
-    result_ptr->command = test.command;
-    result_ptr->device = test.device;
+    result_ptr->command = exec_test.command;
+    result_ptr->device = exec_test.device;
     result_ptr->success = success;
-    result_ptr->flags = test.flags;
+    result_ptr->flags = exec_test.flags;
 
     result_list_insert(&result_list, result_ptr);
 
-    if (!(test.flags & FLAG_WARN) && !success)
+    if (!(exec_test.flags & FLAG_WARN) && !success)
     {
       printf("TEST FAILED\n");
       return;

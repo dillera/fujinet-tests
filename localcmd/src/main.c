@@ -2,9 +2,9 @@
 #include "testing.h"
 #include "results.h"
 #include "platform.h"
+#include "console.h"
+
 #include <stdlib.h>
-#include <stdio.h>
-#include <conio.h>
 
 #ifdef BUILD_ATARI
 #define exit(x) while(1)
@@ -15,7 +15,7 @@
 
 int main(void)
 {
-    init();
+    console_init();
     clrscr();
 
     if (load_commands(PREFIX "COMMANDS.JSN") != FN_ERR_OK) {
@@ -24,7 +24,7 @@ int main(void)
     }
 
     execute_tests("TESTS.JSN");
-    if (screen_width > 32)
+    if (console_width > 32)
     {
         printf("\nTests complete. Press a key for results.");
     }
@@ -37,5 +37,8 @@ int main(void)
     print_test_results();
 
     exit(0);
+#ifdef _CMOC_VERSION_
+    // All other compiles will complain this is unreachable code
     return 0;
+#endif /* _CMOC_VERSION_ */
 }

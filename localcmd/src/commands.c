@@ -8,6 +8,9 @@
 
 FujiCommand *fuji_commands = NULL;
 
+static char query[32];
+static char buffer[64];
+
 void parse_command_arg(FujiArg *arg, const char *buffer)
 {
   const char *p;
@@ -38,8 +41,6 @@ uint8_t load_commands(const char *path)
   uint16_t idx, jdx;
   size_t length;
   FujiCommand *cmd, *next;
-  char query[32];
-  char buffer[64];
 
 
   err = json_open(path);

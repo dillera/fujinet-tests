@@ -10,11 +10,13 @@ static char json_buffer[256];
 #define WRITE_SOCKET "N1:TCP://:" PORT
 #define READ_SOCKET "N2:TCP://localhost:" PORT
 
+// Open Watcom can't do far pointers in a function declaration
+static uint8_t err, status;
+static uint16_t avail;
+
 uint8_t json_open(const char *path)
 {
   size_t length;
-  uint8_t err, status;
-  uint16_t avail;
   FILE *fd;
 
 

@@ -1,12 +1,11 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <conio.h>
-#include <fujinet-fuji.h> 
-
 #include "results.h"
 #include "testing.h"
 #include "platform.h"
+#include "console.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 ResultList result_list;
 AdapterConfigExtended config;
@@ -108,28 +107,22 @@ bool result_list_insert(ResultList *list, TestResult *tr)
 
 void print_test_result_header(char *fn_version)
 {
-    char platform_num_buf[4];
     printf("Test Results:\n");
     printf("FujiNet Version: %s\n\n", fn_version);
-    printf("Platform name: %s ", platform_name());
+    printf("Platform name: %s\n", platform_name());
 
-    platform_number_string(platform_num_buf);
-    if (platform_num_buf[0] != '\0')
-    {
-        printf("(%s)", platform_num_buf);
-    }   
-
-    printf("\n\n");
+    printf("\n");
 }
 
 void print_test_results()
 {
+    ResultNode *n;
+    TestResult *result;
     int count = 0;
     int line_count = 0;
     int pass_count = 0;
     int warn_count = 0;
-    ResultNode *n;
-    TestResult *result;
+    int page_size = console_height - 8;
 
     clrscr();
 
@@ -162,7 +155,7 @@ void print_test_results()
 
         sprintf(outbuf, "%s 0x%02x:%02x %s\n", resultbuf, result->device, result->command, result->command_name);
         printf("%s", outbuf);
-        if (strlen(outbuf) >= screen_width)
+        if (strlen(outbuf) >= console_width)
         {
             line_count +=2;
         }
@@ -189,7 +182,7 @@ void print_test_results()
         n = n->next;
     }
 
-    if (screen_width > 32)
+    if (console_width > 32)
     {
         printf("\nTotal: %u Passed: %u  Warn: %u Failed: %u\n", count, pass_count, warn_count, count - pass_count - warn_count);
     }

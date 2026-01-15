@@ -4,7 +4,7 @@ PLATFORMS += apple2
 PLATFORMS += atari
 PLATFORMS += c64
 #PLATFORMS += adam
-#PLATFORMS += msdos
+PLATFORMS += msdos
 PLATFORMS += msx
 
 # You can run 'make <platform>' to build for a specific platform,
