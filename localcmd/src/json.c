@@ -60,9 +60,7 @@ uint8_t json_open(const char *path)
 
   fclose(fd);
   network_close(WRITE_SOCKET);
-  network_json_parse(READ_SOCKET);
-
-  return FN_ERR_OK;
+  return network_json_parse(READ_SOCKET);
 }
 
 void json_close()
