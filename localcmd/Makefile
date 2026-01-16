@@ -72,4 +72,26 @@ apple2/disk-post:: commands.jsn tests.jsn
 	$(call apple2-copy,-ptx,commands.jsn,$(DISK))
 	$(call apple2-copy,-ptx,tests.jsn,$(DISK))
 
+# $1 == atr flags
+# $2 == source file
+# $3 == disk image
+define atari-copy
+  DEST="$$(basename $2 | tr '[:lower:]' '[:upper:]')" ; \
+    atr $3 put $1 $2 $${DEST}
+endef
+
 DISK_EXTRA_DEPS_ATARI = commands.jsn tests.jsn
+atari/disk-post::
+	$(call atari-copy,,commands.jsn,$(DISK))
+	$(call atari-copy,,tests.jsn,$(DISK))
+
+# $1 == mcopy flags
+# $2 == source file
+# $3 == disk image
+define msdos-copy
+  $(DISK_TOOL_COPY) $1 -i $3 $2 "::/"
+endef
+
+msdos/disk-post:: commands.jsn tests.jsn
+	$(call msdos-copy,,commands.jsn,$(DISK))
+	$(call msdos-copy,,tests.jsn,$(DISK))

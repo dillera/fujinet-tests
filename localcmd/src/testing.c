@@ -34,7 +34,7 @@ static uint8_t reply[256];
 char command[50];
 char query[256];
 
-bool run_test(TestCommand *test, void *data, void *expected)
+bool run_test(TestCommand *test, void *data, const void *expected)
 {
   bool success;
 
@@ -67,10 +67,11 @@ bool run_test(TestCommand *test, void *data, void *expected)
   if (test->flags & FLAG_EXPERR)
     success = !success;
 
+  if (expected)
+    success = !strcmp(expected, (char *) reply);
+
   if (!(test->flags & FLAG_WARN) && !success)
     fail_count++;
-
-  // FIXME - if expected is not NULL check reply
 
   printf("Success: %d  Flags: 0x%02x\n", success, test->flags);
 

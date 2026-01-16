@@ -19,7 +19,7 @@ typedef struct {
   uint16_t data_len, reply_len;
 } TestCommand;
 
-extern bool run_test(TestCommand *test, void *data, void *expected);
+extern bool run_test(TestCommand *test, void *data, const void *expected);
 extern void execute_tests(const char *path);
 
 #endif /* TESTING_H */

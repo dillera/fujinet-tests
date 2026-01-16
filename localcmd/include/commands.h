@@ -1,7 +1,7 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-#include <fujinet-fuji.h> // for uint8_t
+#include <fujinet-fuji.h>
 
 typedef struct {
   char *name;
@@ -18,7 +18,7 @@ typedef struct FujiCommand {
   struct FujiCommand *next;
 } FujiCommand;
 
-extern int load_commands(const char *path);
+extern FN_ERR load_commands(const char *path);
 extern FujiCommand *find_command(const char *name);
 
 #endif /* COMMANDS_H */

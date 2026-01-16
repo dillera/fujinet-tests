@@ -17,6 +17,7 @@
 int main(void)
 {
     uint8_t fail_count = 0;
+    FN_ERR err;
 
     console_init();
     clrscr();
@@ -29,8 +30,9 @@ int main(void)
     if (fail_count)
       exit(1);
 
-    if (load_commands(PREFIX "COMMANDS.JSN") != FN_ERR_OK) {
-      printf("No commands found\n");
+    err = load_commands(PREFIX "COMMANDS.JSN");
+    if (err != FN_ERR_OK) {
+      printf("No commands found - ERROR %02x %02x\n", err, fn_device_error);
       exit(1);
     }
 

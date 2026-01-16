@@ -11,7 +11,7 @@ FujiCommand *fuji_commands = NULL;
 static char query[32];
 static char buffer[64];
 
-void parse_command_arg(FujiArg *arg, const char *buffer)
+bool parse_command_arg(FujiArg *arg, const char *buffer)
 {
   const char *p;
   uint16_t len;
@@ -20,7 +20,7 @@ void parse_command_arg(FujiArg *arg, const char *buffer)
   p = strchr(buffer, ':');
   if (!p) {
     printf("Invalid format string %s\n", buffer);
-    return;
+    return false;
   }
 
   len = p - buffer;
@@ -32,10 +32,10 @@ void parse_command_arg(FujiArg *arg, const char *buffer)
   p++;
   arg->size = atoi(p);
 
-  return;
+  return true;
 }
 
-int load_commands(const char *path)
+FN_ERR load_commands(const char *path)
 {
   uint8_t err, cnum;
   uint16_t idx, jdx;
@@ -54,7 +54,7 @@ int load_commands(const char *path)
     sprintf(query, "/%d/command", idx);
     length = json_query(query, buffer);
     if (length < 0)
-      return -length;
+      return -length; // Turn negative FN_ERR back to positive
     if (!length)
       break;
 
@@ -62,7 +62,7 @@ int load_commands(const char *path)
     sprintf(query, "/%d/name", idx);
     length = json_query(query, buffer);
     if (length < 0)
-      return -length;
+      return -length; // Turn negative FN_ERR back to positive
     if (!length)
       break;
 
@@ -86,23 +86,27 @@ int load_commands(const char *path)
     sprintf(query, "/%d/reply-%s/0", idx, platform_name());
     length = json_query(query, buffer);
     if (length < 0)
-      return -length;
-    if (length)
-      parse_command_arg(&cmd->reply, buffer);
+      return -length; // Turn negative FN_ERR back to positive
+    if (length) {
+      if (!parse_command_arg(&cmd->reply, buffer))
+        return FN_ERR_IO_ERROR;
+    }
     else {
       sprintf(query, "/%d/reply/0", idx);
       length = json_query(query, buffer);
       if (length < 0)
-        return -length;
-      if (length)
-        parse_command_arg(&cmd->reply, buffer);
+        return -length; // Turn negative FN_ERR back to positive
+      if (length) {
+        if (!parse_command_arg(&cmd->reply, buffer))
+          return FN_ERR_IO_ERROR;
+      }
     }
 
     for (jdx = 0; ; jdx++) {
       sprintf(query, "/%d/args/%d", idx, jdx);
       length = json_query(query, buffer);
       if (length < 0)
-        return -length;
+        return -length; // Turn negative FN_ERR back to positive
       if (!length)
         break;
     }
@@ -114,8 +118,9 @@ int load_commands(const char *path)
         sprintf(query, "/%d/args/%d", idx, jdx);
         length = json_query(query, buffer);
         if (length < 0)
-          return -length;
-        parse_command_arg(&cmd->args[jdx], buffer);
+          return -length; // Turn negative FN_ERR back to positive
+        if (!parse_command_arg(&cmd->args[jdx], buffer))
+          return FN_ERR_IO_ERROR;
       }
     }
   }
