@@ -1,9 +1,9 @@
 #include "platform.h"
 #include <coco.h>
 
-const char *platform_name()
+const char *computer_model()
 {
     if (isCoCo3)
-      return "coco 3";
-    return "coco 1/2";
+      return "TRS-80 CoCo 3";
+    return "TRS-80 CoCo 1/2";
 }

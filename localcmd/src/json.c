@@ -1,8 +1,8 @@
+#include "json.h"
+#include <fujinet-network.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fujinet-network.h>
-
-#include "json.h"
+#include <errno.h>
 
 static char json_buffer[256];
 
@@ -23,7 +23,7 @@ FN_ERR json_open(const char *path)
 
   fd = fopen(path, "r");
   if (!fd) {
-    printf("Failed to open %s\n", path);
+    printf("Failed to open %s %d\n", path, errno);
     return FN_ERR_IO_ERROR;
   }
 
@@ -39,21 +39,27 @@ FN_ERR json_open(const char *path)
 
   for (;;) {
     err = network_status(WRITE_SOCKET, &avail, &status, &err);
-    // printf("AVAIL: %u  STATUS: %u  ERR: %u\n", avail, status, err);
+    //printf("AVAIL: %u  STATUS: %u  ERR: %u\n", avail, status, err);
     if (err != FN_ERR_OK)
       return err;
     if (status == 1)
       break;
   }
 
+  printf("DOING ACCEPT\n");
   err = network_accept(WRITE_SOCKET);
-  if (err != FN_ERR_OK)
+  if (err != FN_ERR_OK) {
+    printf("ACCEPT FAIL %d\n", err);
     return err;
+  }
+  printf("ACCEPTED\n");
 
   for (;;) {
     length = fread(json_buffer, 1, 256, fd);
-    if (!length)
+    if (!length) {
+      printf("EOF\n");
       break;
+    }
     err = network_write(WRITE_SOCKET, json_buffer, length);
     if (err != FN_ERR_OK)
       break;

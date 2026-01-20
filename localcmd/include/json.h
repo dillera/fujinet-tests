@@ -2,6 +2,7 @@
 #define JSON_H
 
 #include <fujinet-fuji.h> // for uint8_t
+#include <fujinet-err.h>
 
 extern FN_ERR json_open(const char *path);
 extern FN_ERR json_close();

@@ -2,8 +2,8 @@ PRODUCT = lcltest
 PLATFORMS += coco
 PLATFORMS += apple2
 PLATFORMS += atari
-PLATFORMS += c64
-#PLATFORMS += adam
+#PLATFORMS += c64
+PLATFORMS += adam_cpm
 PLATFORMS += msdos
 PLATFORMS += msx
 
@@ -35,7 +35,8 @@ PLATFORM_COMBOS = \
   c64+=commodore \
   atarixe+=atari \
   msxrom+=msx \
-  msxdos+=msx
+  msxdos+=msx \
+  adam_cpm+=adam
 
 include makefiles/toplevel-rules.mk
 
@@ -45,53 +46,10 @@ include makefiles/toplevel-rules.mk
 # or
 #   apple2/disk: apple2/custom-step1 apple2/custom-step2
 
-# $1 == decb flags
-# $2 == source file
-# $3 == disk image
-define coco-copy
-  DEST="$$(basename $2 | tr '[:lower:]' '[:upper:]')" ; \
-    decb copy $1 $2 $3,$${DEST}
-endef
-
-coco/disk-post:: commands.jsn tests.jsn
-	$(call coco-copy,-a -3,commands.jsn,$(DISK))
-	$(call coco-copy,-a -3,tests.jsn,$(DISK))
+DISK_EXTRA_FILES = commands.jsn tests.jsn
 
 CFLAGS_EXTRA_MSX = -DAMALLOC
 LDFLAGS_EXTRA_MSX = -pragma-define:CRT_HEAP_AMALLOC=3
 
-# $1 == ac flags
-# $2 == source file
-# $3 == disk image
-define apple2-copy
-  DEST="$$(basename $2 | tr '[:lower:]' '[:upper:]')" ; \
-    $(DISK_TOOL) $1 $3 $${DEST} < $2
-endef
-
-apple2/disk-post:: commands.jsn tests.jsn
-	$(call apple2-copy,-ptx,commands.jsn,$(DISK))
-	$(call apple2-copy,-ptx,tests.jsn,$(DISK))
-
-# $1 == atr flags
-# $2 == source file
-# $3 == disk image
-define atari-copy
-  DEST="$$(basename $2 | tr '[:lower:]' '[:upper:]')" ; \
-    atr $3 put $1 $2 $${DEST}
-endef
-
-DISK_EXTRA_DEPS_ATARI = commands.jsn tests.jsn
-atari/disk-post::
-	$(call atari-copy,,commands.jsn,$(DISK))
-	$(call atari-copy,,tests.jsn,$(DISK))
-
-# $1 == mcopy flags
-# $2 == source file
-# $3 == disk image
-define msdos-copy
-  $(DISK_TOOL_COPY) $1 -i $3 $2 "::/"
-endef
-
-msdos/disk-post:: commands.jsn tests.jsn
-	$(call msdos-copy,,commands.jsn,$(DISK))
-	$(call msdos-copy,,tests.jsn,$(DISK))
+CFLAGS_EXTRA_ADAM_CPM = -DAMALLOC
+LDFLAGS_EXTRA_ADAM_CPM = -pragma-define:CRT_HEAP_AMALLOC=3

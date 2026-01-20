@@ -68,7 +68,7 @@ bool run_test(TestCommand *test, void *data, const void *expected)
     success = !success;
 
   if (expected)
-    success = !strcmp(expected, (char *) reply);
+    success = !strcmp((const char *) expected, (char *) reply);
 
   if (!(test->flags & FLAG_WARN) && !success)
     fail_count++;

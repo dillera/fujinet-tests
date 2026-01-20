@@ -109,7 +109,7 @@ void print_test_result_header(char *fn_version)
 {
     printf("Test Results:\n");
     printf("FujiNet Version: %s\n\n", fn_version);
-    printf("Platform name: %s\n", platform_name());
+    printf("Platform: %s  Computer: %s\n", platform_name(), computer_model());
 
     printf("\n");
 }

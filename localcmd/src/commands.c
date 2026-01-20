@@ -54,7 +54,7 @@ FN_ERR load_commands(const char *path)
     sprintf(query, "/%d/command", idx);
     length = json_query(query, buffer);
     if (length < 0)
-      return -length; // Turn negative FN_ERR back to positive
+      return (FN_ERR) -length; // Turn negative FN_ERR back to positive
     if (!length)
       break;
 
@@ -62,7 +62,7 @@ FN_ERR load_commands(const char *path)
     sprintf(query, "/%d/name", idx);
     length = json_query(query, buffer);
     if (length < 0)
-      return -length; // Turn negative FN_ERR back to positive
+      return (FN_ERR) -length; // Turn negative FN_ERR back to positive
     if (!length)
       break;
 
@@ -86,7 +86,7 @@ FN_ERR load_commands(const char *path)
     sprintf(query, "/%d/reply-%s/0", idx, platform_name());
     length = json_query(query, buffer);
     if (length < 0)
-      return -length; // Turn negative FN_ERR back to positive
+      return (FN_ERR) -length; // Turn negative FN_ERR back to positive
     if (length) {
       if (!parse_command_arg(&cmd->reply, buffer))
         return FN_ERR_IO_ERROR;
@@ -95,7 +95,7 @@ FN_ERR load_commands(const char *path)
       sprintf(query, "/%d/reply/0", idx);
       length = json_query(query, buffer);
       if (length < 0)
-        return -length; // Turn negative FN_ERR back to positive
+        return (FN_ERR) -length; // Turn negative FN_ERR back to positive
       if (length) {
         if (!parse_command_arg(&cmd->reply, buffer))
           return FN_ERR_IO_ERROR;
@@ -106,7 +106,7 @@ FN_ERR load_commands(const char *path)
       sprintf(query, "/%d/args/%d", idx, jdx);
       length = json_query(query, buffer);
       if (length < 0)
-        return -length; // Turn negative FN_ERR back to positive
+        return (FN_ERR) -length; // Turn negative FN_ERR back to positive
       if (!length)
         break;
     }
@@ -118,7 +118,7 @@ FN_ERR load_commands(const char *path)
         sprintf(query, "/%d/args/%d", idx, jdx);
         length = json_query(query, buffer);
         if (length < 0)
-          return -length; // Turn negative FN_ERR back to positive
+          return (FN_ERR) -length; // Turn negative FN_ERR back to positive
         if (!parse_command_arg(&cmd->args[jdx], buffer))
           return FN_ERR_IO_ERROR;
       }
