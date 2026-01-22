@@ -19,11 +19,11 @@
 #define platform_name() "adam"
 #endif
 
-#if defined(BUILD_COCO)
+#if defined(BUILD_COCO) || defined(BUILD_APPLE2)
 extern const char *computer_model();
-#else /* ! BUILD_COCO */
+#else
 // FIXME - make nicer strings for other computers too
 #define computer_model() platform_name()
-#endif /* BUILD_COCO */
+#endif
 
 #endif /* PLATFORM_H */
