@@ -105,13 +105,39 @@ bool result_list_insert(ResultList *list, TestResult *tr)
     return true;
 }
 
-void print_test_result_header(char *fn_version)
+void print_test_result_header(char *fn_version, int total, int pass_count, int warn_count)
 {
-    printf("Test Results:\n");
-    printf("FujiNet Version: %s\n\n", fn_version);
-    printf("Platform: %s  Computer: %s\n", platform_name(), computer_model());
+    int fail_count = total - pass_count - warn_count;
 
+    printf("FujiNet FW: %s\n\n", fn_version);
+    printf("Computer: %s\n", computer_model());
+    printf("Total: %d PASS: %d WARN: %d FAIL: %d\n",
+           total, pass_count, warn_count, fail_count);
     printf("\n");
+}
+
+void count_results(int *total_ptr, int *pass_ptr, int *warn_ptr)
+{
+    ResultNode *n;
+    TestResult *result;
+    int total, pass_count, warn_count;
+
+
+    for (n = result_list.head, total = pass_count = warn_count = 0;
+         n;
+         n = n->next, total++)
+    {
+        result = n->tr;
+        if (result->success)
+          pass_count++;
+        else if (result->flags & FLAG_WARN)
+          warn_count++;
+    }
+
+    *total_ptr = total;
+    *pass_ptr = pass_count;
+    *warn_ptr = warn_count;
+    return;
 }
 
 void print_test_results()
@@ -126,7 +152,8 @@ void print_test_results()
 
     clrscr();
 
-    print_test_result_header(fn_config.fn_version);
+    count_results(&count, &pass_count, &warn_count);
+    print_test_result_header(fn_config.fn_version, count, pass_count, warn_count);
 
     n = result_list.head;
     while (n != 0)
@@ -136,19 +163,17 @@ void print_test_results()
         if (result->success)
         {
             strcpy(resultbuf, "PASS");
-            pass_count++;
         }
         else
         {
             if (result->flags & FLAG_WARN)
             {
                 strcpy(resultbuf, "WARN");
-                warn_count++;
             }
             else
             {
                 strcpy(resultbuf, "FAIL");
-            }   
+            }
         }
 
         sprintf(outbuf, "%s 0x%02x:%02x %s\n", resultbuf, result->device, result->command, result->command_name);
@@ -162,30 +187,18 @@ void print_test_results()
             line_count++;
         }
 
-        count++;
-
-        if (line_count % page_size == 0 || line_count + 1 >= page_size)
+        if ((line_count && line_count % page_size == 0) || !n->next)
         {
-
-            if (count != 0)
+            printf("\nPress any key to continue...");
+            cgetc();
+            if (n->next)
             {
-                printf("\nPress any key to continue...");
-                cgetc();
                 clrscr();
-                print_test_result_header(fn_config.fn_version);
+                print_test_result_header(fn_config.fn_version, count, pass_count, warn_count);
             }
-
         }
 
         n = n->next;
     }
 
-    if (console_width > 32)
-    {
-        printf("\nTotal: %u Passed: %u  Warn: %u Failed: %u\n", count, pass_count, warn_count, count - pass_count - warn_count);
-    }
-    else
-    {
-        printf("\nTotal: %u\nPassed: %u Warn: %uFailed: %u\n", count, pass_count, warn_count, count - pass_count - warn_count);
-    }
 }
