@@ -7,7 +7,7 @@ struct apple_name {
   const char *name;
 };
 
-struct apple_name apple_map[] = {
+static struct apple_name apple_map[] = {
   {APPLE_UNKNOWN, "Unknown Apple ]["},
   {APPLE_II, "Apple ]["},
   {APPLE_IIPLUS, "Apple ][ Plus"},

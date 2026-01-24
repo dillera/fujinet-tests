@@ -20,11 +20,11 @@ $(BUILD_DISK): $(BUILD_EXEC) $(ATRBOOT) $(DISK_EXTRA_DEPS) $(DISK_EXTRA_FILES) |
 	$(RM) $@
 	$(RM) -rf $(CACHE_PLATFORM)/disk
 	$(MKDIR_P) $(CACHE_PLATFORM)/disk
-	cp $< $(CACHE_PLATFORM)/disk
+	cp $< $(CACHE_PLATFORM)/disk/AUTORUN.SYS
 	$(call require,$(DISK_TOOL),$(DISK_TOOL_INFO))
 	$(call require,$(DISK_TOOL_COPY),$(DISK_TOOL_COPY_INFO))
-	$(DISK_TOOL) -m -S -B $(ATRBOOT) $@ $(CACHE_PLATFORM)/disk
-	$(foreach f,$(DISK_EXTRA_FILES),$(call copy-to-disk,,$(f),$(notdir $(f)),$@);)
+	$(foreach f,$(DISK_EXTRA_FILES),cp $(f) $(CACHE_PLATFORM)/disk ; )
+	$(DISK_TOOL) -S -b Dos25 $@ $(CACHE_PLATFORM)/disk
 	make -f $(PLATFORM_MK) $(PLATFORM)/disk-post
 
 PICOBOOT_DOWNLOAD_URL = https://github.com/FujiNetWIFI/assets/releases/download/picobin

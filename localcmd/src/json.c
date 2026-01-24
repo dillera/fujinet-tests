@@ -10,6 +10,9 @@ static char json_buffer[256];
 #define WRITE_SOCKET "N1:TCP://:" PORT
 #define READ_SOCKET "N2:TCP://localhost:" PORT
 
+#define MAX_RETRIES 5
+#define MAX_CONN_WAIT 10
+
 // Open Watcom can't do far pointers in a function declaration
 static FN_ERR err;
 static uint8_t status;
@@ -17,7 +20,8 @@ static uint16_t avail;
 
 FN_ERR json_open(const char *path)
 {
-  size_t length;
+  uint8_t retries, status_count;
+  size_t length, total;
   FILE *fd;
 
 
@@ -32,19 +36,27 @@ FN_ERR json_open(const char *path)
   if (err != FN_ERR_OK)
     return err;
 
-  printf("Opening read socket (%s)...\n", READ_SOCKET);
-  err = network_open(READ_SOCKET, OPEN_MODE_READ, 0);
-  if (err != FN_ERR_OK)
-    return err;
-
-  for (;;) {
-    err = network_status(WRITE_SOCKET, &avail, &status, &err);
-    //printf("AVAIL: %u  STATUS: %u  ERR: %u\n", avail, status, err);
+  for (retries = 0; retries < MAX_RETRIES; retries++) {
+    printf("Opening read socket (%s)...\n", READ_SOCKET);
+    err = network_open(READ_SOCKET, OPEN_MODE_READ, 0);
     if (err != FN_ERR_OK)
       return err;
-    if (status == 1)
+
+    for (status_count = 0; status_count < MAX_CONN_WAIT; status_count++) {
+      err = network_status(WRITE_SOCKET, &avail, &status, &err);
+      //printf("AVAIL: %u  STATUS: %u  ERR: %u\n", avail, status, err);
+      if (err != FN_ERR_OK)
+        return err;
+      if (status == 1)
+        break;
+    }
+
+    if (status_count < MAX_CONN_WAIT)
       break;
   }
+
+  if (retries >= MAX_RETRIES)
+    return FN_ERR_IO_ERROR;
 
   printf("DOING ACCEPT\n");
   err = network_accept(WRITE_SOCKET);
@@ -54,13 +66,14 @@ FN_ERR json_open(const char *path)
   }
   printf("ACCEPTED\n");
 
-  for (;;) {
+  for (total = 0; ; total += length) {
     length = fread(json_buffer, 1, 256, fd);
     if (!length) {
       printf("EOF\n");
       break;
     }
     err = network_write(WRITE_SOCKET, json_buffer, length);
+    printf("%d ", total + length);
     if (err != FN_ERR_OK)
       break;
   }

@@ -47,6 +47,7 @@ include makefiles/toplevel-rules.mk
 #   apple2/disk: apple2/custom-step1 apple2/custom-step2
 
 DISK_EXTRA_FILES = commands.jsn tests.jsn
+DISK_EXTRA_FILES_ATARI = DOS.SYS
 
 CFLAGS_EXTRA_MSX = -DAMALLOC
 LDFLAGS_EXTRA_MSX = -pragma-define:CRT_HEAP_AMALLOC=3

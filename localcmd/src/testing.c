@@ -19,18 +19,22 @@ typedef struct {
 } FujiDeviceID;
 
 const FujiDeviceID fujiDeviceTable[] = {
-  {FUJI_DEVICEID_FUJINET, "FUJINET"},
-  {FUJI_DEVICEID_CLOCK,   "APETIME"},
-  {FUJI_DEVICEID_CPM,     "CPM"},
-  {FUJI_DEVICEID_MIDI,    "MIDI"},
-  {FUJI_DEVICEID_VOICE,   "VOICE"},
+  {FUJI_DEVICEID_FUJINET,   "FUJINET"},
+  {FUJI_DEVICEID_CLOCK,     "APETIME"},
+  {FUJI_DEVICEID_CPM,       "CPM"},
+  {FUJI_DEVICEID_MIDI,      "MIDI"},
+  {FUJI_DEVICEID_VOICE,     "VOICE"},
+  {FUJI_DEVICEID_NETWORK,   "N1"},
+  {FUJI_DEVICEID_NETWORK+1, "N2"},
+  {FUJI_DEVICEID_NETWORK+2, "N3"},
+  {FUJI_DEVICEID_NETWORK+3, "N4"},
   {0, NULL},
 };
 
 #define FLAG_MASK ((uint8_t) ~(FLAG_WARN | FLAG_EXPERR))
 
 unsigned int fail_count = 0;
-static uint8_t reply[256];
+static uint8_t data_buf[256], reply_buf[256];
 char command[50];
 char query[256];
 
@@ -42,33 +46,35 @@ bool run_test(TestCommand *test, void *data, const void *expected)
   printf("Received command: 0x%02x:%02x\n"
          "  FLAGS: 0x%02x\n"
          "  AUX: 0x%02x 0x%02x 0x%02x 0x%02x\n"
-         "  DATA: %d REPLY: %d\n",
+         "  DATA: %d \"%s\"\n"
+         "  REPLY: %d\n",
          test->device, test->command,
          test->flags,
          test->aux1, test->aux2, test->aux3, test->aux4,
-         test->data_len, test->reply_len);
+         test->data_len, data ? data : "<NULL>",
+         test->reply_len);
 
   printf("Executing 0x%02x:%02x\n", test->device, test->command);
   if (test->device >= FUJI_DEVICEID_DISK && test->device <= FUJI_DEVICEID_DISK_LAST) {
     // Disks are handled by the opearating system
-    success = disk_command(test, data, reply, sizeof(reply));
+    success = disk_command(test, data, reply_buf, sizeof(reply_buf));
   }
   else if (test->device == FUJI_DEVICEID_FILE) {
     // pseudo-commands for test controller to open/read/write files
-    success = file_command(test, data, reply, sizeof(reply));
+    success = file_command(test, data, reply_buf, sizeof(reply_buf));
   }
   else {
     success = fuji_bus_call(test->device, test->command, test->flags & FLAG_MASK,
                             test->aux1, test->aux2, test->aux3, test->aux4,
                             data, test->data_len,
-                            test->reply_len ? reply : (uint8_t *) NULL, test->reply_len);
+                            test->reply_len ? reply_buf : (uint8_t *) NULL, test->reply_len);
   }
 
   if (test->flags & FLAG_EXPERR)
     success = !success;
 
   if (expected)
-    success = !strcmp((const char *) expected, (char *) reply);
+    success = !strcmp((const char *) expected, (char *) reply_buf);
 
   if (!(test->flags & FLAG_WARN) && !success)
     fail_count++;
@@ -120,12 +126,14 @@ void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
 
   case 'f':
     test->data_len = arg->size;
-    *dataptr = input;
+    strcpy((char *) data_buf, input);
+    *dataptr = data_buf;
     break;
 
   case 's':
     test->data_len = strlen(input);
-    *dataptr = input;
+    strcpy((char *) data_buf, input);
+    *dataptr = data_buf;
     add_aux_val(test, test->data_len, arg->size, auxpos);
     break;
 

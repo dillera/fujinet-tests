@@ -133,10 +133,12 @@
     {"command": 82,  "name": "READ",
      "args": ["handle:u8"]},
     {"command": 79,  "name": "OPEN",
-     "args": ["mode:u8", "data:s"]},
+     "args": ["mode:u8", "translation:u8", "data:f256"]},
     {"command": 73,  "name": "GET_TIME_ISO"},
     {"command": 67,  "name": "CLOSE"},
     {"command": 63,  "name": "HSIO_INDEX"},
+    {"command": 44,  "name": "CHDIR",
+     "args": ["data:f256"]},
     {"command": 2,   "name": "SEND_ERROR"},
     {"command": 1,   "name": "SEND_RESPONSE"},
     {"command": 0,   "name": "DEVICE_READY"}
