@@ -46,7 +46,12 @@ include makefiles/toplevel-rules.mk
 # or
 #   apple2/disk: apple2/custom-step1 apple2/custom-step2
 
-DISK_EXTRA_FILES = commands.jsn tests.jsn
+DISK_EXTRA_DEPS_COCO = src/coco/autoexec.bas
+
+coco/disk-post::
+	decb copy -t -0 src/coco/autoexec.bas "$(DISK),AUTOEXEC.BAS"
+
+DISK_EXTRA_FILES = commands.jsn tests.tst
 DISK_EXTRA_FILES_ATARI = DOS.SYS
 
 CFLAGS_EXTRA_MSX = -DAMALLOC
