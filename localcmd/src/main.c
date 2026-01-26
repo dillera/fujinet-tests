@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 #ifdef BUILD_ATARI
 #define exit(x) while(1)
@@ -14,6 +15,32 @@
 #else /* ! BUILD_ATARI */
 #define PREFIX ""
 #endif /* BUILD_ATARI */
+
+byte find_file_by_extension(char *outfname, const char *ext)
+{
+  DIR *dirp;
+  struct dirent *entry;
+  char *p;
+
+
+  printf("SEARCHING FOR: *.%s\n", ext);
+  dirp = opendir("");
+  while (1) {
+    entry = readdir(dirp);
+    if (!entry)
+      break;
+    p = strrchr(entry->d_name, '.');
+    if (p && strcasecmp(p + 1, ext))
+      break;
+  }
+
+  closedir(dirp);
+  if (!entry)
+    return 0;
+
+  strcpy(outfname, entry->d_name);
+  return 1;
+}
 
 int main(void)
 {
@@ -38,15 +65,11 @@ int main(void)
       exit(1);
     }
 
-#ifdef _CMOC_VERSION_
     if (!find_file_by_extension(testfname, "TST"))
     {
         printf("NO TEST FILE FOUND!\n");
         exit(1);
     }
-#else
-    strcpy(testfname, "TESTS.TST");
-#endif
 
     printf("RUNNING TESTS: %s\n", testfname);
     execute_tests(testfname);

@@ -16,6 +16,4 @@ extern int fclose(FILE *stream);
 extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 extern size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
-extern byte find_file_by_extension(char *outfname, const char *ext);
-
 #endif /* STDIO_H */
