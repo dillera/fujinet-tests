@@ -97,8 +97,10 @@ struct dirent *readdir(DIR *dirp)
 
 
   while (1) {
-    for (; dirp->offset < DECB_SECTOR_SIZE; dirp->offset += sizeof(decb_dir_entry)) {
+    while (dirp->offset < DECB_SECTOR_SIZE) {
       entry = (decb_dir_entry *) &dirp->buffer[dirp->offset];
+      dirp->offset += sizeof(decb_dir_entry);
+
       if (entry->filename[0] == ERASED_ENTRY)
         continue;
       if (entry->filename[0] == END_OF_DIR)

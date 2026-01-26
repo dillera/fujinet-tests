@@ -30,7 +30,7 @@ byte find_file_by_extension(char *outfname, const char *ext)
     if (!entry)
       break;
     p = strrchr(entry->d_name, '.');
-    if (p && strcasecmp(p + 1, ext))
+    if (p && !strcasecmp(p + 1, ext))
       break;
   }
 
