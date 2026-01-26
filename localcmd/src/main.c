@@ -66,9 +66,6 @@ int main(void)
     cgetc();
     print_test_results();
 
-    exit(0);
-#ifdef _CMOC_VERSION_
     // All other compilers will complain this is unreachable code
     return 0;
-#endif /* _CMOC_VERSION_ */
 }
