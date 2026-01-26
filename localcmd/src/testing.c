@@ -51,7 +51,7 @@ bool run_test(TestCommand *test, void *data, const void *expected)
          test->device, test->command,
          test->flags,
          test->aux1, test->aux2, test->aux3, test->aux4,
-         test->data_len, data ? (char *) data : "<NULL>",
+         test->data_len, data ? (const char *) data : "<NULL>",
          test->reply_len);
 
   printf("Executing 0x%02x:%02x\n", test->device, test->command);
@@ -248,6 +248,7 @@ void execute_tests(const char *path)
     result_ptr->flags = exec_test.flags;
 
     result_list_insert(&result_list, result_ptr);
+    count++;
 
     if (!(exec_test.flags & FLAG_WARN) && !success)
     {
@@ -255,7 +256,6 @@ void execute_tests(const char *path)
       return;
     }
 
-    count++;
   }
 
   json_close();
