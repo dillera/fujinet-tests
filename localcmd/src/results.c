@@ -11,6 +11,7 @@ ResultList result_list;
 AdapterConfigExtended fn_config;
 char outbuf[80];
 char resultbuf[5];
+int total, pass_count, warn_count;
 
 void result_list_init(ResultList *list)
 {
@@ -18,6 +19,7 @@ void result_list_init(ResultList *list)
     list->tail = 0;
     list->last_failure = 0;
     list->last_warn = 0;
+    total = pass_count = warn_count = 0;
 }
 
 bool result_list_insert(ResultList *list, TestResult *tr)
@@ -31,6 +33,7 @@ bool result_list_insert(ResultList *list, TestResult *tr)
     if (!node)
         return false;
 
+    total++;
     node->tr = tr;
     node->next = 0;
 
@@ -38,6 +41,10 @@ bool result_list_insert(ResultList *list, TestResult *tr)
     is_warn = (!tr->success) && (tr->flags & FLAG_WARN);
     is_fail = (!tr->success) && !is_warn; /* i.e., failure without warn */
     /* pass is tr->success == true */
+    if (is_warn)
+      warn_count++;
+    else if (!is_fail)
+      pass_count++;
 
     if (!list->head)
     {
@@ -105,7 +112,7 @@ bool result_list_insert(ResultList *list, TestResult *tr)
     return true;
 }
 
-void print_test_result_header(char *fn_version, int total, int pass_count, int warn_count)
+void print_test_result_header(char *fn_version)
 {
     int fail_count = total - pass_count - warn_count;
 
@@ -116,47 +123,20 @@ void print_test_result_header(char *fn_version, int total, int pass_count, int w
     printf("\n");
 }
 
-void count_results(int *total_ptr, int *pass_ptr, int *warn_ptr)
-{
-    ResultNode *n;
-    TestResult *result;
-    int total, pass_count, warn_count;
-
-
-    for (n = result_list.head, total = pass_count = warn_count = 0;
-         n;
-         n = n->next, total++)
-    {
-        result = n->tr;
-        if (result->success)
-          pass_count++;
-        else if (result->flags & FLAG_WARN)
-          warn_count++;
-    }
-
-    *total_ptr = total;
-    *pass_ptr = pass_count;
-    *warn_ptr = warn_count;
-    return;
-}
-
 void print_test_results()
 {
     ResultNode *n;
     TestResult *result;
     int count = 0;
     int line_count = 0;
-    int pass_count = 0;
-    int warn_count = 0;
     int page_size = console_height - 8;
 
     clrscr();
 
-    count_results(&count, &pass_count, &warn_count);
-    print_test_result_header(fn_config.fn_version, count, pass_count, warn_count);
+    print_test_result_header(fn_config.fn_version);
 
     n = result_list.head;
-    while (n != 0)
+    for (count = 0; count < total; count++)
     {
         result = n->tr;
 
@@ -194,7 +174,7 @@ void print_test_results()
             if (n->next)
             {
                 clrscr();
-                print_test_result_header(fn_config.fn_version, count, pass_count, warn_count);
+                print_test_result_header(fn_config.fn_version);
             }
         }
 
