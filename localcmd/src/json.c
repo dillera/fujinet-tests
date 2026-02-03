@@ -53,6 +53,9 @@ FN_ERR json_open(const char *path)
 
     if (status_count < MAX_CONN_WAIT)
       break;
+
+    printf("Closing " READ_SOCKET "\n");
+    network_close(READ_SOCKET);
   }
 
   if (retries >= MAX_RETRIES)
@@ -74,6 +77,7 @@ FN_ERR json_open(const char *path)
     }
     err = network_write(WRITE_SOCKET, json_buffer, length);
     printf("%d ", total + length);
+    fflush(stdout);
     if (err != FN_ERR_OK)
       break;
   }

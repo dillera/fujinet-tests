@@ -15,7 +15,7 @@ typedef struct {
 } TestResult;
 
 typedef struct ResultNode {
-  TestResult *tr;           
+  TestResult *tr;
   struct ResultNode *next;
 } ResultNode;
 
@@ -26,8 +26,7 @@ typedef struct {
   ResultNode *last_warn;     // end of warn block (warns are after failures)
 } ResultList;
 
-
-extern AdapterConfigExtended fn_config;
+extern AdapterConfig fn_config;
 extern ResultList result_list;
 
 void result_list_init(ResultList *list);

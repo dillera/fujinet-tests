@@ -19,7 +19,7 @@ typedef struct {
 } decb_dir_entry;
 
 static DIR dirtable[MAX_OPEN_DIRS];
-static struct dirent cur_entry;
+static struct dirent cur_dirent;
 
 static byte read_next_dir_sector(DIR *dirp)
 {
@@ -106,10 +106,10 @@ struct dirent *readdir(DIR *dirp)
       if (entry->filename[0] == END_OF_DIR)
         return NULL;
 
-      memcpy(cur_entry.d_name, entry->filename,
+      memcpy(cur_dirent.d_name, entry->filename,
              sizeof(entry->filename) + sizeof(entry->extension));
-      denormalize(cur_entry.d_name, (char *) entry->filename);
-      return &cur_entry;
+      denormalize(cur_dirent.d_name, (char *) entry->filename);
+      return &cur_dirent;
     }
 
     read_next_dir_sector(dirp);

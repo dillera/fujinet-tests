@@ -194,7 +194,8 @@ void execute_tests(const char *path)
       }
 
       if (!fujiDeviceTable[dev_idx].num) {
-        printf("Unknown device %s\n", command);;
+        printf("Unknown device %s\n", command);
+        // FIXME - Record this test as a FAIL
         return;
       }
     }

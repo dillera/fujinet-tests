@@ -9,6 +9,10 @@
 #include <string.h>
 #include <dirent.h>
 
+#ifdef __WATCOMC__
+#include <strings.h>
+#endif /* _WATCOMC__ */
+
 #ifdef BUILD_ATARI
 #define exit(x) while(1)
 #define PREFIX "D:"
@@ -16,7 +20,10 @@
 #define PREFIX ""
 #endif /* BUILD_ATARI */
 
-byte find_file_by_extension(char *outfname, const char *ext)
+// Open Watcom can't do far pointers in a function declaration
+static char testfname[32];
+
+bool find_file_by_extension(char *outfname, const char *ext)
 {
   DIR *dirp;
   struct dirent *entry;
@@ -24,12 +31,18 @@ byte find_file_by_extension(char *outfname, const char *ext)
 
 
   printf("SEARCHING FOR: *.%s\n", ext);
-  dirp = opendir("");
+  dirp = opendir(".");
+  if (!dirp) {
+    printf("FAILED TO OPEN DIRECTORY\n");
+    return 0;
+  }
+
   while (1) {
     entry = readdir(dirp);
     if (!entry)
       break;
-    p = strrchr(entry->d_name, '.');
+    printf("ENTRY \"%s\"\n", entry->d_name);
+    p = strchr(entry->d_name, '.');
     if (p && !strcasecmp(p + 1, ext))
       break;
   }
@@ -46,12 +59,11 @@ int main(void)
 {
     uint8_t fail_count = 0;
     FN_ERR err;
-    char testfname[13];
 
     console_init();
     clrscr();
 
-    if (!fuji_get_adapter_config_extended(&fn_config)) {
+    if (!fuji_get_adapter_config(&fn_config)) {
       strcpy(fn_config.fn_version, "FAIL");
       fail_count++;
     }
@@ -59,16 +71,17 @@ int main(void)
     if (fail_count)
       exit(1);
 
-    err = load_commands(PREFIX "COMMANDS.JSN");
-    if (err != FN_ERR_OK) {
-      printf("No commands found - ERROR %02x %02x\n", err, fn_device_error);
-      exit(1);
-    }
-
+    // Make sure there is a test file before loading COMMANDS.JSN
     if (!find_file_by_extension(testfname, "TST"))
     {
         printf("NO TEST FILE FOUND!\n");
         exit(1);
+    }
+
+    err = load_commands(PREFIX "COMMANDS.JSN");
+    if (err != FN_ERR_OK) {
+      printf("No commands found - ERROR %02x %02x\n", err, fn_device_error);
+      exit(1);
     }
 
     printf("RUNNING TESTS: %s\n", testfname);
@@ -89,6 +102,5 @@ int main(void)
     cgetc();
     print_test_results();
 
-    // All other compilers will complain this is unreachable code
     return 0;
 }

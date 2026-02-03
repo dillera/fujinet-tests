@@ -1,8 +1,6 @@
 #ifndef DIRENT_H
 #define DIRENT_H
 
-#ifdef _CMOC_VERSION_
-
 #include <disk.h>
 
 #define DECB_SECTOR_SIZE 256
@@ -21,11 +19,5 @@ struct dirent {
 extern DIR *opendir(const char *name);
 extern int closedir(DIR *dirp);
 extern struct dirent *readdir(DIR *dirp);
-
-#else /* ! _CMOC_VERSION_ */
-
-#include <dirent.h>
-
-#endif /* _CMOC_VERSION_ */
 
 #endif /* DIRENT_H */

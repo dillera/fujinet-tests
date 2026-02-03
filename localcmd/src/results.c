@@ -8,7 +8,7 @@
 #include <string.h>
 
 ResultList result_list;
-AdapterConfigExtended fn_config;
+AdapterConfig fn_config;
 char outbuf[80];
 char resultbuf[5];
 int total, pass_count, warn_count;
@@ -170,7 +170,9 @@ void print_test_results()
         if ((line_count && line_count % page_size == 0) || !n->next)
         {
             printf("\nPress any key to continue...");
+            fflush(stdout);
             cgetc();
+            printf("\n");
             if (n->next)
             {
                 clrscr();
