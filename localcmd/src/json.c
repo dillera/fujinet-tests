@@ -54,7 +54,7 @@ FN_ERR json_open(const char *path)
       break;
   }
 
-  if (status_count < MAX_CONN_WAIT)
+  if (status_count >= MAX_CONN_WAIT)
     return FN_ERR_IO_ERROR;
 
   printf("DOING ACCEPT\n");
