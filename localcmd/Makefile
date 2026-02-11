@@ -47,6 +47,7 @@ include makefiles/toplevel-rules.mk
 #   apple2/disk: apple2/custom-step1 apple2/custom-step2
 
 DISK_EXTRA_DEPS_COCO = src/coco/autoexec.bas
+LDFLAGS_EXTRA_COCO = --org=0E00 --limit=7C00
 
 coco/disk-post::
 	decb copy -t -0 src/coco/autoexec.bas "$(DISK),AUTOEXEC.BAS"
