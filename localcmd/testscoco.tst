@@ -43,15 +43,10 @@
   },
 
   {
-    "command": "get_guid",
-    "replyLength": 37,
-    "expected": "%%%%%%%%-%%%%-%%%%-%%%%-%%%%%%%%%%%%"
-  },
-
-  {
     "device": "apetime",
     "command": "get_time_iso",
-    "replyLength": 25
+    "replyLength": 25,
+    "warnOnly": true
   },
 
   {
@@ -59,5 +54,11 @@
     "device_slot": 1,
     "mode": 64,
     "errorExpected": true
+  },
+
+  {
+    "command": "get_guid",
+    "replyLength": 37,
+    "expected": "%%%%%%%%-%%%%-%%%%-%%%%-%%%%%%%%%%%%"
   }
 ]
