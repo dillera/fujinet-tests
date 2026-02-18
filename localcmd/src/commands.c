@@ -30,6 +30,11 @@ bool parse_command_arg(FujiArg *arg, const char *buffer)
   p++;
   arg->type = *p;
   p++;
+  arg->endian = ENDIAN_NATIVE;
+  if (*p == ENDIAN_LITTLE || *p == ENDIAN_BIG) {
+    arg->endian = *p;
+    p++;
+  }
   arg->size = atoi(p);
 
   return true;

@@ -24,7 +24,7 @@ static uint16_t avail;
 
 FN_ERR json_open(const char *path)
 {
-  uint8_t retries, status_count;
+  uint8_t status_count;
   size_t length, total;
   FILE *fd;
 

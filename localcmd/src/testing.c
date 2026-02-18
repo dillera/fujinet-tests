@@ -93,31 +93,55 @@ bool run_test(TestCommand *test, void *data, const void *expected)
   return success;
 }
 
-void add_val(uint8_t *ptr, uint16_t val, uint16_t size, uint16_t *pos)
+void add_little_endian(uint8_t *ptr, uint16_t val, uint16_t size)
 {
-  uint16_t count, offset;
+  uint16_t idx;
 
 
-  size /= 8;
-  ptr += *pos;
-  for (count = 0; count < size; count++) {
-    // FXIME - deal with endianness
-#ifdef _CMOC_VERSION_
-    offset = size - 1 - count;
-#else /* ! _CMOC_VERSION_ */
-    offset = count;
-#endif /* _CMOC_VERSION_ */
-    *(ptr + offset) = (uint8_t) (val & 0xFF);
+  printf("LITTLE ENDIAN %04x\n", val);
+  for (idx = 0; idx < size; idx++) {
+    *(ptr + idx) = (uint8_t) (val & 0xFF);
     val >>= 8;
   }
-  *pos += count;
 
   return;
 }
 
-void add_aux_val(TestCommand *test, uint16_t val, uint16_t size, uint16_t *auxpos)
+void add_big_endian(uint8_t *ptr, uint16_t val, uint16_t size)
 {
-  add_val(&test->aux1, val, size, auxpos);
+  uint16_t idx;
+
+
+  for (idx = 0; idx < size; idx++) {
+    *(ptr + (size - 1 - idx)) = (uint8_t) (val & 0xFF);
+    val >>= 8;
+  }
+
+  return;
+}
+
+void add_val(uint8_t *ptr, uint16_t val, uint16_t size, ENDIAN endian, uint16_t *pos)
+{
+  size /= 8;
+  ptr += *pos;
+  switch (endian) {
+  case ENDIAN_LITTLE:
+    add_little_endian(ptr, val, size);
+    break;
+
+  case ENDIAN_BIG:
+    add_big_endian(ptr, val, size);
+    break;
+  }
+
+  *pos += size;
+
+  return;
+}
+
+void add_aux_val(TestCommand *test, uint16_t val, uint16_t size, ENDIAN endian, uint16_t *auxpos)
+{
+  add_val(&test->aux1, val, size, endian, auxpos);
   test->flags++;
   if (test->flags < 4 && size > 8) {
     test->flags += FLAG_EXCEEDS_U8;
@@ -133,6 +157,7 @@ void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
 {
   int val;
 
+
   switch (arg->type) {
   case TYPE_BOOL:
     val = 0;
@@ -140,7 +165,7 @@ void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
       val = 1;
     else if (atoi(input))
       val = 1;
-    add_aux_val(test, val, 8, auxpos);
+    add_aux_val(test, val, 8, ENDIAN_NATIVE, auxpos);
     break;
 
   case TYPE_FIXED_LEN:
@@ -153,19 +178,19 @@ void add_test_argument(TestCommand *test, FujiArg *arg, const char *input,
     test->data_len += strlen(input);
     strcpy((char *) data_buf, input);
     *dataptr = data_buf;
-    add_aux_val(test, test->data_len, arg->size, auxpos);
+    add_aux_val(test, test->data_len, arg->size, arg->endian, auxpos);
     break;
 
   case TYPE_STRUCT:
     // This is pretty much the same as TYPE_UNSIGNED but packs into
     // data instead of aux
     *dataptr = data_buf;
-    add_val(data_buf, atoi(input), arg->size, &test->data_len);
+    add_val(data_buf, atoi(input), arg->size, arg->endian, &test->data_len);
     break;
 
   default: // integer types
     // FIXME - handle unsigned greater than 32767
-    add_aux_val(test, atoi(input), arg->size, auxpos);
+    add_aux_val(test, atoi(input), arg->size, arg->endian, auxpos);
     break;
   }
 
@@ -254,7 +279,7 @@ void execute_tests(const char *path)
     bytesread = json_query(query, command);
     if (bytesread)
     {
-      strncpy(expected_buf, command, bytesread);
+      strncpy((char *) expected_buf, command, bytesread);
       expected = (char *) expected_buf;
     }
     else

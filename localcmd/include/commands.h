@@ -11,9 +11,21 @@ enum {
   TYPE_STRUCT    = '{',
 };
 
+typedef enum {
+  ENDIAN_LITTLE  = '<',
+  ENDIAN_BIG     = '>',
+} ENDIAN;
+
+#ifdef _CMOC_VERSION_
+#define ENDIAN_NATIVE ENDIAN_BIG
+#else /* ! _CMOC_VERSION_ */
+#define ENDIAN_NATIVE ENDIAN_LITTLE
+#endif /* _CMOC_VERSION_ */
+
 typedef struct {
   char *name;
   uint8_t type;
+  uint8_t endian;
   uint16_t size;
 } FujiArg;
 

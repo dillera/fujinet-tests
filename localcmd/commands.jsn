@@ -90,7 +90,7 @@
     {"command": 201, "name": "BASE64_DECODE_OUTPUT",
      "args": ["length:u16"]},
     {"command": 200, "name": "HASH_INPUT",
-     "args": ["data:s16"]},
+     "args": ["data:s<16"]},
     {"command": 199, "name": "HASH_COMPUTE",
      "args": ["algorithm:u8"]},
     {"command": 198, "name": "HASH_LENGTH",

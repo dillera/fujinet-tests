@@ -5,7 +5,7 @@ PLATFORMS += atari
 #PLATFORMS += c64
 PLATFORMS += adam_cpm
 PLATFORMS += msdos
-PLATFORMS += msx
+#PLATFORMS += msx
 
 # You can run 'make <platform>' to build for a specific platform,
 # or 'make <platform>/<target>' for a platform-specific target.
@@ -62,6 +62,7 @@ coco/disk-post::
 	writecocofile $(DISK) $(TESTLOAD_BIN)
 
 DISK_EXTRA_FILES = commands.jsn tests.tst
+#DISK_EXTRA_FILES = commands.jsn appkey.tst
 DISK_EXTRA_FILES_ATARI = DOS.SYS
 DISK_TOOL_FLAGS_ATARI = -S -b Dos25
 EXEC_NAME_ATARI = AUTORUN.SYS
