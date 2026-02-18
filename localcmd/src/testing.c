@@ -98,7 +98,6 @@ void add_little_endian(uint8_t *ptr, uint16_t val, uint16_t size)
   uint16_t idx;
 
 
-  printf("LITTLE ENDIAN %04x\n", val);
   for (idx = 0; idx < size; idx++) {
     *(ptr + idx) = (uint8_t) (val & 0xFF);
     val >>= 8;
